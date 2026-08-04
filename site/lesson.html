@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260709a">
+  <link rel="stylesheet" href="style.css?v=20260804a">
   <style>
     .scroll-progress {
       position: fixed;
@@ -1767,6 +1767,7 @@
   <script src="progress.js?v=20260709a"></script>
   <script src="reminder.js?v=20260709a"></script>
   <script src="header.js?v=20260525a" defer></script>
+  <script src="tts.js?v=20260804a" defer></script>
   <script src="cmdpalette.js?v=20260525a" defer></script>
   <script src="figures.js?v=20260610e"></script>
   <script src="lesson-figures.js?v=20260610e"></script>
@@ -1784,7 +1785,7 @@
   <script src="figures-llms2.js?v=20260610e"></script>
   <script src="figures-infra.js?v=20260610e"></script>
   <script src="figures-frontier.js?v=20260610e"></script>
-  <script src="figures-i18n-zh.js?v=20260727a"></script>
+  <script src="figures-manifest.js?v=20260804a"></script>
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
     mermaid.initialize({
@@ -2142,7 +2143,11 @@
         initCodeCopy();
         renderMermaidBlocks();
         renderMathSpans();
-        if (window.mountLessonFigures) window.mountLessonFigures(el);
+        if (window.AIFS_mountLessonFigures) {
+          window.AIFS_mountLessonFigures(el);
+        } else if (window.mountLessonFigures) {
+          window.mountLessonFigures(el);
+        }
         renderAIPanels();
         mountVideoPlayer(lessonPath);
         buildTOC();
