@@ -968,5 +968,150 @@
     "r2": "https://videos.aieng-zh.cn/lessons/10-34-gradient-checkpointing.mp4",
     "bilibili": "BV1rSj26VEPE",
     "slug": "10-34-gradient-checkpointing"
+  },
+  "phases/00-setup-and-tooling/01-dev-environment": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-01-dev-environment.mp4",
+    "bilibili": "BV1C38v62E88",
+    "slug": "00-01-dev-environment"
+  },
+  "phases/00-setup-and-tooling/02-git-and-collaboration": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-02-git-collaboration.mp4",
+    "bilibili": "BV1k38v62E8E",
+    "slug": "00-02-git-collaboration"
+  },
+  "phases/00-setup-and-tooling/03-gpu-setup-and-cloud": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-03-gpu-setup-and-cloud.mp4",
+    "bilibili": "BV16j8v6VEVq",
+    "slug": "00-03-gpu-setup-and-cloud"
+  },
+  "phases/00-setup-and-tooling/04-apis-and-keys": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-04-apis-and-keys.mp4",
+    "bilibili": "BV1Jj8v65EzF",
+    "slug": "00-04-apis-and-keys"
+  },
+  "phases/00-setup-and-tooling/05-jupyter-notebooks": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-05-jupyter-notebooks.mp4",
+    "bilibili": "BV1H58v61EDL",
+    "slug": "00-05-jupyter-notebooks"
+  },
+  "phases/00-setup-and-tooling/06-python-environments": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-06-python-environments.mp4",
+    "bilibili": "BV1c58v61EvL",
+    "slug": "00-06-python-environments"
+  },
+  "phases/00-setup-and-tooling/07-docker-for-ai": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-07-docker-for-ai.mp4",
+    "bilibili": "BV1aa8v6AEaH",
+    "slug": "00-07-docker-for-ai"
+  },
+  "phases/00-setup-and-tooling/08-editor-setup": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-08-editor-setup.mp4",
+    "bilibili": "BV1ea8v6AEsG",
+    "slug": "00-08-editor-setup"
+  },
+  "phases/00-setup-and-tooling/09-data-management": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-09-data-management.mp4",
+    "bilibili": "BV1Ra8v6AENP",
+    "slug": "00-09-data-management"
+  },
+  "phases/00-setup-and-tooling/10-terminal-and-shell": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-10-terminal-and-shell.mp4",
+    "bilibili": "BV1v88v6eE5w",
+    "slug": "00-10-terminal-and-shell"
+  },
+  "phases/00-setup-and-tooling/11-linux-for-ai": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-11-linux-for-ai.mp4",
+    "bilibili": "BV1Y88v6eE4E",
+    "slug": "00-11-linux-for-ai"
+  },
+  "phases/00-setup-and-tooling/12-debugging-and-profiling": {
+    "r2": "https://videos.aieng-zh.cn/lessons/00-12-debugging-and-profiling.mp4",
+    "bilibili": "BV1R88v6eEn1",
+    "slug": "00-12-debugging-and-profiling"
+  },
+  "phases/11-llm-engineering/01-prompt-engineering": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-01-prompt-engineering.mp4",
+    "bilibili": "BV19U8e6aEu5",
+    "slug": "11-01-prompt-engineering"
+  },
+  "phases/11-llm-engineering/02-few-shot-cot": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-02-few-shot-cot.mp4",
+    "bilibili": "BV1Cg8v67EPn",
+    "slug": "11-02-few-shot-cot"
+  },
+  "phases/11-llm-engineering/03-structured-outputs": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-03-structured-outputs.mp4",
+    "bilibili": "BV1AM8v6SEkT",
+    "slug": "11-03-structured-outputs"
+  },
+  "phases/11-llm-engineering/04-embeddings": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-04-embeddings.mp4",
+    "bilibili": "BV1PM8v6SEx6",
+    "slug": "11-04-embeddings"
+  },
+  "phases/11-llm-engineering/05-context-engineering": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-05-context-engineering.mp4",
+    "bilibili": "BV11fhP6TE5W",
+    "slug": "11-05-context-engineering"
+  },
+  "phases/11-llm-engineering/06-rag": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-06-rag.mp4",
+    "bilibili": "BV1tfhP6MEVo",
+    "slug": "11-06-rag"
+  },
+  "phases/11-llm-engineering/07-advanced-rag": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-07-advanced-rag.mp4",
+    "bilibili": "BV1UDhP6kEkn",
+    "slug": "11-07-advanced-rag"
+  },
+  "phases/11-llm-engineering/08-fine-tuning-lora": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-08-fine-tuning-lora.mp4",
+    "bilibili": "BV1fhhP6xEiL",
+    "slug": "11-08-fine-tuning-lora"
+  },
+  "phases/11-llm-engineering/09-function-calling": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-09-function-calling.mp4",
+    "bilibili": "BV1zhhP64EtY",
+    "slug": "11-09-function-calling"
+  },
+  "phases/11-llm-engineering/10-evaluation": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-10-evaluation.mp4",
+    "bilibili": "BV1ovhP6XEW9",
+    "slug": "11-10-evaluation"
+  },
+  "phases/11-llm-engineering/11-caching-cost": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-11-caching-cost.mp4",
+    "bilibili": "BV1G2hP6jE1c",
+    "slug": "11-11-caching-cost"
+  },
+  "phases/11-llm-engineering/12-guardrails": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-12-guardrails.mp4",
+    "bilibili": "BV1oBhP6DEnV",
+    "slug": "11-12-guardrails"
+  },
+  "phases/11-llm-engineering/13-production-app": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-13-production-app.mp4",
+    "bilibili": "BV1RBhP6DEvc",
+    "slug": "11-13-production-app"
+  },
+  "phases/11-llm-engineering/14-model-context-protocol": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-14-model-context-protocol.mp4",
+    "bilibili": "BV1eFhP6mEF7",
+    "slug": "11-14-model-context-protocol"
+  },
+  "phases/11-llm-engineering/15-prompt-caching": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-15-prompt-caching.mp4",
+    "bilibili": "BV1GNhP65Eyy",
+    "slug": "11-15-prompt-caching"
+  },
+  "phases/11-llm-engineering/16-langgraph-state-machines": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-16-langgraph-state-machines.mp4",
+    "bilibili": "BV1GNhP65Ewz",
+    "slug": "11-16-langgraph-state-machines"
+  },
+  "phases/11-llm-engineering/17-agent-framework-tradeoffs": {
+    "r2": "https://videos.aieng-zh.cn/lessons/11-17-agent-framework-tradeoffs.mp4",
+    "bilibili": "BV1MLhP6qETQ",
+    "slug": "11-17-agent-framework-tradeoffs"
   }
 }
