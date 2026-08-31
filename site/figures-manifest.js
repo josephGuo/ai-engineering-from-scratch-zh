@@ -10,7 +10,7 @@
   var baseUrl = current && current.src
     ? current.src.replace(/[^/?#]+(?:[?#].*)?$/, '')
     : '/';
-  var i18nSrc = 'figures-i18n-zh.js?v=20260804a';
+  var i18nSrc = 'figures-i18n-zh.js?v=20260831b';
 
   var MODULES = [
   {
@@ -586,6 +586,52 @@
       "wb-ab-runs",
       "wb-pack-install"
     ]
+  },
+  {
+    "src": "figures-agent-skills.js?v=20260830a",
+    "figures": [
+      "skill-package-anatomy",
+      "skill-runtime-lifecycle",
+      "skill-tool-orthogonality",
+      "skill-validation-order",
+      "skill-discovery-pipeline",
+      "skill-disclosure-levels",
+      "skill-reference-map",
+      "skill-resource-containment",
+      "skill-invocation-stages",
+      "skill-routing-abstention",
+      "skill-argument-boundaries",
+      "skill-host-adapter",
+      "skill-authority-chain",
+      "skill-trust-surface",
+      "skill-approval-decision",
+      "skill-workflow-extraction",
+      "skill-eval-layers",
+      "skill-package-install",
+      "skill-authoring-loop"
+    ]
+  },
+  {
+    "src": "figures-mcp.js?v=20260830a",
+    "figures": [
+      "mcp-tool-call",
+      "t3-dispatch-loop",
+      "tp-client-merge",
+      "tp-transport-handshake",
+      "t3-primitive-sort",
+      "t3-sampling-flip",
+      "t3-roots-boundary",
+      "tp-task-lifecycle",
+      "t3-ui-sandbox",
+      "tp-tool-poisoning",
+      "t3-scope-stepup",
+      "t3-gateway-funnel",
+      "t3-jwks-rotate",
+      "mcp-contract-pipeline",
+      "mcp-reliability-race",
+      "mcp-registry-admission",
+      "mcp-conformance-operations"
+    ]
   }
 ];
 
@@ -653,6 +699,16 @@
   function ensureModules(root) {
     var required = requiredModules(root);
     if (!required.hasFigures) return Promise.resolve(false);
+
+    // The generated upstream manifest owns the complete provider graph. Load
+    // through it first so legacy and newly added providers are all lazy; this
+    // zh manifest then adds the translation overlay and remains a fallback for
+    // static previews built before the generated loader existed.
+    if (typeof window.AIFS_loadFigureProviders === 'function') {
+      return window.AIFS_loadFigureProviders(root)
+        .then(function () { return loadScript(i18nSrc); })
+        .then(function () { return true; });
+    }
 
     var pending = [];
     for (var i = 0; i < required.sources.length; i++) {
