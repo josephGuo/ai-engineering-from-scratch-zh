@@ -2503,7 +2503,7 @@
         path = lessonParams.get('path') || '';
         hasTrackContext = !!(lessonParams.get('track') || lessonParams.get('fromTrack'));
       } catch (_) {}
-      if (path.indexOf('certifications/claude/lessons/') !== 0 && !hasTrackContext) return;
+      if (!/^certifications\/[a-z0-9-]+\/lessons\/[a-z0-9-]+$/.test(path) && !hasTrackContext) return;
 
       window.__AIFS_CERTIFICATION_DATA_READY = new Promise(function (resolve, reject) {
         var script = document.createElement('script');
@@ -2639,7 +2639,7 @@
   <script src="header.js?v=20260831b" defer></script>
   <script src="cmdpalette.js?v=20260831a" defer></script>
   <script src="lesson-figures.js?v=b88d7b13ddfa"></script>
-  <script src="figure-manifest.js?v=f83e9aabe9ff"></script>
+  <script src="figure-manifest.js?v=8455f2ebeb21"></script>
   <script src="figures-manifest.js?v=20260831b"></script>
   <script>
     (function () {
@@ -2653,7 +2653,7 @@
 
       // 预渲染静态课程页的规范 URL：/lessons/<phase>/<lesson>/
       function lessonHref(path) {
-        if (String(path).indexOf('certifications/claude/lessons/') === 0) {
+        if (/^certifications\/[a-z0-9-]+\/lessons\/[a-z0-9-]+$/.test(String(path))) {
           return '/lesson?path=' + encodeURIComponent(path);
         }
         return '/lessons/' + String(path).replace(/^phases\//, '').replace(/\/+$/, '') + '/';
@@ -3784,9 +3784,11 @@
       function certificationDisclaimerHtml() {
         if (!certificationLesson) return '';
         var certs = certificationData();
-        var program = certs && certs.program ? certs.program : {};
         var contextTrack = certificationContextTrack();
-        var disclaimer = program.disclaimer || '这是独立的社区备考内容，与 Anthropic 不存在隶属、认可、赞助或授权关系。';
+        var programs = certs && Array.isArray(certs.programs) ? certs.programs : [];
+        var programId = certificationLesson.programId || (contextTrack && contextTrack.programId) || '';
+        var program = programs.find(function (item) { return item.id === programId; }) || {};
+        var disclaimer = program.disclaimer || '这是独立的社区备考内容，与认证提供方不存在隶属、认可、赞助或授权关系。';
         var scoring = program.scoringNotice || '课程练习百分比不是官方认证分数，也不能保证通过考试。';
         var breadcrumb = '<div class="cert-breadcrumb lesson-cert-breadcrumb" aria-label="认证课程导航"><a href="certifications.html">认证</a>';
         if (contextTrack) {

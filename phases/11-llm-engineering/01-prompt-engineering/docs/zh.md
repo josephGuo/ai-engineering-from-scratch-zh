@@ -937,24 +937,24 @@ assistant prefill（`"{"`）逼着 Claude 接着产出 JSON、不带任何开场
 ### Google：带安全设置的 Gemini
 
 ```python
-# import google.generativeai as genai
+# from google import genai
+# from google.genai import types
 #
-# genai.configure(api_key="your-key")
+# client = genai.Client()
 #
-# model = genai.GenerativeModel(
-#     "gemini-1.5-pro",
-#     system_instruction="You are a technical analyst. Be precise and cite sources.",
-#     generation_config=genai.GenerationConfig(
+# response = client.models.generate_content(
+#     model="gemini-3.8-flash",
+#     contents="Compare PostgreSQL and MySQL for write-heavy workloads.",
+#     config=types.GenerateContentConfig(
+#         system_instruction="You are a technical analyst. Be precise and cite sources.",
 #         temperature=0.3,
 #         max_output_tokens=2048,
 #     ),
 # )
-#
-# response = model.generate_content("Compare PostgreSQL and MySQL for write-heavy workloads.")
 # print(response.text)
 ```
 
-Gemini 把 system 指令当成模型配置的一部分来处理，而不是一条消息。2M token 的上下文窗口意味着你可以塞进那些 GPT-4o 或 Claude 装不下的海量 few-shot 示例集。
+Gemini 把 system 指令当成模型配置的一部分来处理，而不是一条消息。1M token 的上下文窗口意味着你可以塞进 GPT-4o 的 128K 窗口装不下的海量 few-shot 示例集。
 
 ### 与 provider 无关的 prompt 模板
 
@@ -1023,6 +1023,6 @@ Python 代码（`code/prompt_engineering.py`）是一个独立的测试框架。
 - [Wei et al., 2022——"Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"](https://arxiv.org/abs/2201.11903)——奠基性论文，证明"一步步思考"能把 LLM 在推理任务上的准确率提升 10-40%
 - [Zamfirescu-Pereira et al., 2023——"Why Johnny Can't Prompt"](https://arxiv.org/abs/2304.13529)——研究非专家为何在 prompt engineering 上吃力，以及什么让 prompt 有效
 - [Shin et al., 2023——"Prompt Engineering a Prompt Engineer"](https://arxiv.org/abs/2311.05661)——用 LLM 自动优化 prompt，元 prompt 的基础
-- [LMSYS Chatbot Arena](https://chat.lmsys.org/)——LLM 的实时盲测对比，你可以把同一个 prompt 在多个模型上测试，并投票哪个回复更好
+- [Arena（原 LMSYS Chatbot Arena）](https://arena.ai/)——LLM 的实时盲测对比，你可以把同一个 prompt 在多个模型上测试，并投票哪个回复更好
 - [DAIR.AI Prompt Engineering Guide](https://www.promptingguide.ai/)——详尽的 prompt 技巧目录，附带示例（zero-shot、few-shot、CoT、ReAct、self-consistency）；从业者在更广义"Prompt engineering"层面上的参考资料。
 - [Anthropic prompt library](https://docs.anthropic.com/en/prompt-library)——按用例精选的、已验证好用的 prompt；展示了在生产中落地的结构性模式。

@@ -259,6 +259,7 @@ class ELOTracker:
 用 token 概率计算困惑度。实践中你会从模型的 logits 得到这些。这里我们用一个概率分布模拟。
 
 ```python
+import hashlib
 import numpy as np
 
 def perplexity(log_probs):
@@ -268,7 +269,7 @@ def perplexity(log_probs):
     return float(np.exp(avg_neg_log_prob))
 
 def token_log_probs_simulated(text, model_quality=0.8):
-    np.random.seed(hash(text) % 2**31)
+    np.random.seed(int(hashlib.sha256(text.encode()).hexdigest()[:8], 16) % 2**31)
     tokens = text.split()
     log_probs = []
     for i, token in enumerate(tokens):
@@ -516,4 +517,4 @@ RAGAS 衡量通用 eval 漏掉的东西：模型的答案是否扎根于检索�
 - [Hendrycks et al., 2021 -- "Measuring Massive Multitask Language Understanding"](https://arxiv.org/abs/2009.03300) -- MMLU 论文，尽管饱和仍是被引用最多的 LLM 基准
 - [Chen et al., 2021 -- "Evaluating Large Language Models Trained on Code"](https://arxiv.org/abs/2107.03374) -- OpenAI 的 HumanEval 论文，确立了代码生成评估方法论
 - [Zheng et al., 2023 -- "Judging LLM-as-a-Judge"](https://arxiv.org/abs/2306.05685) -- 对用 LLM 评估 LLM 的系统分析，包含位置偏见和啰嗦偏见的发现
-- [LMSYS Chatbot Arena](https://chat.lmsys.org/) -- 拥有 200 万+ 票的众包模型对比平台，最受信任的真实世界 LLM 排名
+- [Arena（原 LMSYS Chatbot Arena）](https://arena.ai/leaderboard) -- 拥有 200 万+ 票的众包模型对比平台，最受信任的真实世界 LLM 排名
