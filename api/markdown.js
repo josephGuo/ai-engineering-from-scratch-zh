@@ -2,52 +2,31 @@ const fs = require('fs');
 const path = require('path');
 
 const SITE_ROOT = path.join(__dirname, '..', 'site');
-const HTML_BY_PATH = {
-  '/': 'index.html',
-  '/about': 'about.html',
-  '/catalog': 'catalog.html',
-  '/glossary': 'glossary.html',
-  '/path': 'prereqs.html',
-  '/roadmap': 'prereqs.html',
-  '/developer': 'developer.html',
-  '/docs': 'developer.html',
-  '/contact': 'contact.html',
-  '/privacy': 'privacy.html',
-};
+const { PAGES: HTML_BY_PATH } = require('../lib/agent-content');
 
-function parseAccept(header) {
-  if (!header) return [{ type: 'text/html', q: 1 }];
-  return header.split(',').map((part, index) => {
-    const [rawType, ...params] = part.trim().toLowerCase().split(';');
-    const qParam = params.find((param) => param.trim().startsWith('q='));
-    const q = qParam ? Number.parseFloat(qParam.trim().slice(2)) : 1;
-    return { type: rawType.trim(), q: Number.isFinite(q) ? Math.max(0, Math.min(1, q)) : 0, index };
-  }).filter((entry) => entry.type).sort((a, b) => {
-    if (b.q !== a.q) return b.q - a.q;
-    const specificity = (type) => type === '*/*' ? 0 : type.endsWith('/*') ? 1 : 2;
-    return specificity(b.type) - specificity(a.type) || a.index - b.index;
-  });
+const { representation } = require('../lib/agent-http');
+
+const HUB_PATH = /^\/(phase|glossary)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+
+// Only the source-generated registry can extend the finite public page allowlist.
+function hubPageRegistry(manifest) {
+  if (!manifest || !manifest.pages || typeof manifest.pages !== 'object' || Array.isArray(manifest.pages)) throw new Error('invalid hub registry');
+  for (const [route, page] of Object.entries(manifest.pages)) {
+    const match = HUB_PATH.exec(route);
+    if (!match || !page || page.html !== `hubs/${match[1]}/${match[2]}.html` ||
+        page.markdown !== `agent-pages/${match[1]}/${match[2]}.md`) throw new Error('invalid hub registry entry');
+  }
+  return manifest.pages;
 }
 
-function qualityFor(accepted, mediaType) {
-  const exact = accepted.find((entry) => entry.type === mediaType);
-  if (exact) return exact.q;
-  const wildcard = accepted.find((entry) => entry.type === `${mediaType.split('/')[0]}/*`)
-    || accepted.find((entry) => entry.type === '*/*');
-  return wildcard ? wildcard.q : 0;
-}
-
-function markdownFor(requestPath) {
-  const llms = fs.readFileSync(path.join(SITE_ROOT, 'llms.txt'), 'utf8');
-  if (requestPath === '/') return llms;
-  return `# AI Engineering from Scratch · 简体中文版\n\nCanonical page: https://aieng-zh.cn${requestPath}\n\n面向 agent 的课程索引： https://aieng-zh.cn/llms.txt。\n\n${llms}`;
-}
-
-module.exports = (req, res) => {
+function createHandler({ siteRoot = SITE_ROOT, readHubPages = () => JSON.parse(fs.readFileSync(path.join(siteRoot, 'hub-pages.json'), 'utf8')) } = {}) {
+  let hubs;
+  return (req, res) => {
   const method = req.method || 'GET';
   function send(status, contentType, body) {
     res.statusCode = status;
     res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+    res.setHeader('Content-Length', String(Buffer.byteLength(body)));
     res.end(method === 'HEAD' ? undefined : body);
   }
   function problem(status, title, code, detail) {
@@ -57,13 +36,13 @@ module.exports = (req, res) => {
     }) + '\n');
   }
 
-  const requestPath = String((req.query && req.query.path) || '/').split('?')[0] || '/';
-  const accepted = parseAccept(req.headers.accept || '');
-  const markdownQ = qualityFor(accepted, 'text/markdown');
-  const htmlQ = qualityFor(accepted, 'text/html');
+  const requested = (req.query && req.query.path) ?? '/';
+  const requestPath = typeof requested === 'string' ? requested : '';
+  const type = representation(req.headers.accept);
   res.setHeader('Vary', 'Accept, Accept-Encoding');
   res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=86400, stale-while-revalidate=604800');
   res.setHeader('X-API-Version', '1');
+  res.setHeader('Content-Language', 'zh-CN');
 
   if (method !== 'GET' && method !== 'HEAD') {
     res.setHeader('Allow', 'GET, HEAD');
@@ -71,28 +50,52 @@ module.exports = (req, res) => {
     return;
   }
 
-  const file = Object.hasOwn(HTML_BY_PATH, requestPath) ? HTML_BY_PATH[requestPath] : null;
+  if (typeof requested !== 'string') {
+    problem(400, 'Bad Request', 'invalid_parameter', 'path 必须是单个字符串参数。');
+    return;
+  }
+
+  let page = Object.hasOwn(HTML_BY_PATH, requestPath)
+    ? { html: HTML_BY_PATH[requestPath], markdown: 'agent-pages/' + HTML_BY_PATH[requestPath].replace('.html', '.md') }
+    : null;
+  if (!page && HUB_PATH.test(requestPath)) {
+    try {
+      if (!hubs) hubs = hubPageRegistry(readHubPages());
+      page = Object.hasOwn(hubs, requestPath) ? hubs[requestPath] : null;
+    } catch (_) {
+      problem(503, 'Service Unavailable', 'content_unavailable', '页面内容暂不可用，请稍后重试。');
+      return;
+    }
+  }
+  const file = page && page.html;
   if (!file) {
     res.setHeader('Cache-Control', 'no-store');
-    if (markdownQ >= htmlQ && markdownQ > 0) {
+    if (type === 'text/markdown') {
       send(404, 'text/markdown', '# 页面不存在\n\n请查看[课程索引](/llms.txt)、[站点地图](/sitemap.xml)或[课程目录](/catalog.html)。\n');
-    } else if (htmlQ > 0) {
-      send(404, 'text/html', fs.readFileSync(path.join(SITE_ROOT, '404.html'), 'utf8'));
+    } else if (type === 'text/html') {
+      send(404, 'text/html', fs.readFileSync(path.join(siteRoot, '404.html'), 'utf8'));
     } else {
       problem(404, 'Not Found', 'resource_not_found', '请通过 /llms.txt 或 /sitemap.xml 查找公开资源。');
     }
     return;
   }
 
-  if (!markdownQ && !htmlQ) {
+  if (!type) {
     problem(406, 'Not Acceptable', 'representation_not_supported', '请请求 text/html 或 text/markdown。');
     return;
   }
 
-  if (markdownQ >= htmlQ && markdownQ > 0) {
-    send(200, 'text/markdown', markdownFor(requestPath));
-    return;
+  try {
+    if (type === 'text/markdown') {
+      send(200, 'text/markdown', fs.readFileSync(path.join(siteRoot, page.markdown), 'utf8'));
+      return;
+    }
+    send(200, 'text/html', fs.readFileSync(path.join(siteRoot, file), 'utf8'));
+  } catch (_) {
+    problem(503, 'Service Unavailable', 'content_unavailable', '页面内容暂不可用，请稍后重试。');
   }
+  };
+}
 
-  send(200, 'text/html', fs.readFileSync(path.join(SITE_ROOT, file), 'utf8'));
-};
+module.exports = createHandler();
+module.exports.createHandler = createHandler;

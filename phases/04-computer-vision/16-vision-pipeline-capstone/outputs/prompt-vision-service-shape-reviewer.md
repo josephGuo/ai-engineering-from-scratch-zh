@@ -1,6 +1,6 @@
 ---
 name: prompt-vision-service-shape-reviewer
-description: Review a vision service's code for contract/response shape violations and name the first breaking bug
+description: 审查视觉服务代码中违反契约或响应结构的地方，指出首个导致服务出错的 bug。
 phase: 4
 lesson: 16
 ---

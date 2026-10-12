@@ -1,6 +1,6 @@
 ---
 name: skill-linear-probe-runner
-description: Write the complete linear-probe evaluation for any frozen encoder and labelled dataset
+description: 为任意冻结编码器和带标签数据集编写完整的线性探测评估流程。
 version: 1.0.0
 phase: 4
 lesson: 17

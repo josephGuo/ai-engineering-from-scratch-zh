@@ -1,6 +1,6 @@
 ---
 name: skill-pipeline-budget-planner
-description: Given target latency and throughput, assign a time budget to every pipeline stage and flag which stage will miss its budget first
+description: 根据目标延迟和吞吐量，为流水线各阶段分配时间预算，并指出哪个阶段最先超出预算。
 version: 1.0.0
 phase: 4
 lesson: 16

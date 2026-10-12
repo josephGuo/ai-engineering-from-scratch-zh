@@ -1,6 +1,6 @@
 ---
 name: prompt-zero-shot-class-picker
-description: Design prompt templates for zero-shot CLIP given a list of classes and a domain
+description: 根据类别列表和应用领域，为零样本 CLIP 设计 prompt 模板。
 phase: 4
 lesson: 18
 ---

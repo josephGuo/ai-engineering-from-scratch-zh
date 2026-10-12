@@ -1,6 +1,6 @@
 ---
 name: tool-interface-reviewer
-description: Audit a tool definition (name + description + JSON Schema + executor outline) for loop fitness before it ships to an LLM.
+description: 在将工具交给 LLM 使用前，审查工具定义（名称、描述、JSON Schema 和执行器概要）是否适合 agent 循环。
 version: 1.0.0
 phase: 13
 lesson: 01

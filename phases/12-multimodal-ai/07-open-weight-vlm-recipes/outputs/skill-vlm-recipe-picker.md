@@ -1,6 +1,6 @@
 ---
 name: vlm-recipe-picker
-description: Pick an open-weight VLM recipe (encoder, connector, LLM, data mix, resolution schedule) with ablation-table citations for every choice.
+description: 选择开放权重 VLM 的训练配方（编码器、连接器、LLM、数据混合与分辨率调度），并为每项选择引用消融实验表作为依据。
 version: 1.0.0
 phase: 12
 lesson: 07

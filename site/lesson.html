@@ -7,15 +7,15 @@
   <link rel="icon" href="/favicon.ico?v=20260831a" sizes="32x32">
   <link rel="icon" href="/favicon.svg?v=20260831a" type="image/svg+xml">
   <!-- AIFS:LESSON-SEO:START -->
-  <title>课程 - AI Engineering from Scratch</title>
-  <meta name="description" content="AI Engineering from Scratch 课程中的一节。528 节课、20 个阶段、四种语言，每个算法都从最原始的数学手写出来。">
-  <meta property="og:title" content="AI Engineering from Scratch · 课程">
+  <title>课程 - AI 工程从零开始</title>
+  <meta name="description" content="AI 工程从零开始 课程中的一节。528 节课、20 个阶段、四种语言，每个算法都从最原始的数学手写出来。">
+  <meta property="og:title" content="AI 工程从零开始 · 课程">
   <meta property="og:description" content="528 节课，20 个阶段。亲手写出反向传播、分词器、注意力机制和 agent 循环。">
   <meta property="og:image" content="https://aieng-zh.cn/og-image.png?v=2">
   <!-- og:url omitted intentionally: lesson.html is a static template that loads the lesson body client-side via ?path=. Static hosting cannot template the URL, so we let crawlers fall back to the request URL (which is the lesson-specific share link). -->
   <meta property="og:type" content="article">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AI Engineering from Scratch">
+  <meta name="twitter:title" content="AI 工程从零开始">
   <meta name="twitter:description" content="528 节课，20 个阶段。从原始数学开始亲手构建。">
   <meta name="twitter:image" content="https://aieng-zh.cn/og-image.png?v=2">
   <link rel="canonical" href="https://aieng-zh.cn/lesson.html">
@@ -23,8 +23,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260831a">
-  <link rel="stylesheet" href="certifications.css?v=20260818b">
+  <link rel="stylesheet" href="style.css?v=20261012e">
+  <link rel="stylesheet" href="certifications.css?v=20261012e">
   <style>
     .scroll-progress {
       position: fixed;
@@ -171,8 +171,49 @@
       min-width: 0;
       margin-left: 240px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       padding: 56px 32px 96px;
+    }
+
+    .lesson-hub-links {
+      flex: 0 0 100%;
+      max-width: 720px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--rule-soft);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+    }
+
+    .lesson-hub-trail {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 8px;
+      list-style: none;
+      text-transform: uppercase;
+    }
+
+    .lesson-hub-trail li + li::before {
+      content: "/";
+      margin-right: 8px;
+      color: var(--ink-mute);
+    }
+
+    .lesson-hub-terms {
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: inherit;
+      color: inherit;
+    }
+
+    .lesson-hub-terms span {
+      color: var(--ink-mute);
+      text-transform: uppercase;
     }
 
     .lesson-content {
@@ -349,7 +390,7 @@
 
     .lesson-article h1 {
       font-family: var(--font-display);
-      font-size: clamp(2rem, 5vw, 3rem);
+      font-size: clamp(min(2rem, 10vw), 5vw, 3rem);
       font-weight: 400;
       text-transform: uppercase;
       letter-spacing: 0.02em;
@@ -362,7 +403,7 @@
 
     .lesson-article h2 {
       font-family: var(--font-display);
-      font-size: clamp(1.5rem, 3vw, 1.9rem);
+      font-size: clamp(min(1.5rem, 7.5vw), 3vw, 1.9rem);
       font-weight: 400;
       text-transform: uppercase;
       letter-spacing: 0.02em;
@@ -506,7 +547,7 @@
       list-style: none;
       padding-left: 28px;
       margin-bottom: 18px;
-      counter-reset: ol-counter;
+      counter-reset: ol-counter var(--ol-start, 0);
     }
 
     .lesson-article ol li {
@@ -1242,6 +1283,32 @@
       background: var(--bg-surface);
     }
 
+    .lesson-figure .lf-readable-viewport {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .lesson-figure .lf-readable-viewport svg {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      margin: 4px 0 0;
+    }
+
+    .lf-readability-hint {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+
+    .lf-readable-viewport:focus-visible,
+    .mermaid-render:focus-visible,
+    .mermaid-modal-center:focus-visible {
+      outline: 2px solid var(--blueprint);
+      outline-offset: -2px;
+    }
+
     .mermaid-source { display: none; }
 
     .mermaid-modal-overlay {
@@ -1305,7 +1372,8 @@
 
     .mermaid-modal-center {
       min-height: 100%;
-      width: 100%;
+      min-width: 100%;
+      width: max-content;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1326,12 +1394,10 @@
       height: auto;
     }
 
-    :where(
-      .lesson-article .mermaid-render foreignObject p,
-      .lesson-article .mermaid-render foreignObject span,
-      .mermaid-modal-body foreignObject p,
-      .mermaid-modal-body foreignObject span
-    ) {
+    .lesson-article .mermaid-render foreignObject p,
+    .lesson-article .mermaid-render foreignObject span,
+    .mermaid-modal-body foreignObject p,
+    .mermaid-modal-body foreignObject span {
       font-family: "JetBrains Mono", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
       font-size: 13px;
       line-height: 1.5;
@@ -2412,6 +2478,7 @@
     }
 
     @media (max-width: 900px) {
+      .mermaid-toolbar { padding-right: 44px; }
       .lesson-sidebar { transform: translateX(-100%); }
       .lesson-sidebar.open { transform: translateX(0); }
       .lesson-sidebar-toggle {
@@ -2428,7 +2495,7 @@
 
     @media (max-width: 768px) {
       .lesson-main { padding: 56px 16px 60px; }
-      .lesson-action-head { grid-template-columns: minmax(0, 1fr); }
+      .lesson-action-head { display: grid; grid-template-columns: minmax(0, 1fr); }
       .lesson-action-loop { grid-template-columns: minmax(0, 1fr); }
       .lesson-action-step {
         border-right: 0;
@@ -2510,7 +2577,7 @@
       .lesson-article p,
       .lesson-article ul li,
       .lesson-article ol li { font-size: 0.96rem; }
-      .lesson-article h1 { font-size: clamp(1.9rem, 12vw, 2.55rem); }
+      .lesson-article h1 { font-size: min(12vw, 2.55rem); }
       .lesson-article > p:first-of-type::first-letter { font-size: 2.6rem; }
       .lesson-article ul { padding-left: 18px; }
       .lesson-article ol { padding-left: 24px; }
@@ -2618,11 +2685,13 @@
         </div>
         <!-- AIFS:LESSON-FALLBACK:END -->
       </div>
+      <!-- AIFS:LESSON-HUBS:START -->
+      <!-- AIFS:LESSON-HUBS:END -->
     </main>
     <aside class="toc-sidebar" id="tocSidebar" aria-hidden="true"></aside>
   </div>
 
-  <script src="md-render.js?v=20260612a"></script>
+  <script src="md-render.js?v=20261013a"></script>
   <script src="build-meta.js"></script>
   <script src="data.js?v=20260831a"></script>
   <script>
@@ -2645,7 +2714,7 @@
       });
     }());
   </script>
-  <script src="content-source.js?v=20260831a"></script>
+  <script src="content-source.js?v=20261012a"></script>
   <script src="progress.js?v=20260831a"></script>
   <script id="learningPathProgressRuntime">
     (function (root) {
@@ -2767,11 +2836,11 @@
     });
     window._mermaidReady = mermaid;
   </script>
-  <script src="header.js?v=20260831b" defer></script>
-  <script src="cmdpalette.js?v=20260831a" defer></script>
+  <script src="header.js?v=20261012b" defer></script>
+  <script src="cmdpalette.js?v=20261012b" defer></script>
   <script src="lesson-figures.js?v=b88d7b13ddfa"></script>
   <script src="figure-manifest.js?v=3623c333051d"></script>
-  <script src="figures-manifest.js?v=20261009a"></script>
+  <script src="figures-manifest.js?v=20261013b"></script>
   <script>
     (function () {
       // 渲染器（parseMd 等纯函数）已抽至 md-render.js，与 build.js 预渲染共用。
@@ -2861,6 +2930,7 @@
       var SOURCE_OWNER = /^[A-Za-z0-9-]+$/.test(SOURCE_CONFIG.owner || '') ? SOURCE_CONFIG.owner : 'fancyboi999';
       var SOURCE_REPO = /^[A-Za-z0-9_.-]+$/.test(SOURCE_CONFIG.repo || '') ? SOURCE_CONFIG.repo : 'ai-engineering-from-scratch-zh';
       var REPO_TREE = 'https://github.com/fancyboi999/ai-engineering-from-scratch-zh/tree/' + encodeURIComponent(ACTIVE_REF) + '/';
+      var embeddedLesson = readEmbeddedLesson();
       var certificationTrack = null;
       var certificationOriginTrack = null;
       var certificationLesson = null;
@@ -3425,10 +3495,10 @@
         }
 
         if (learningPathMode) {
-          var pathReturnHref = 'catalog.html';
+          var pathReturnHref = '/catalog.html';
           var pathReturnLabel = '完整课程目录';
           if (learningPath.kind === 'career-route') {
-            pathReturnHref = 'learning-paths.html#career-route-' + encodeURIComponent(learningPath.id);
+            pathReturnHref = '/learning-paths.html#career-route-' + encodeURIComponent(learningPath.id);
             pathReturnLabel = '返回职业路线';
           }
           var pathHtml = '<div class="sidebar-phase-nav"><a href="' + pathReturnHref + '">&larr; ' + pathReturnLabel + '</a></div>';
@@ -3566,6 +3636,24 @@
           });
       }
 
+      function readEmbeddedLesson() {
+        var node = document.getElementById('lessonMarkdown');
+        if (!node) return null;
+        try {
+          var data = JSON.parse(node.textContent);
+          return data && typeof data.markdown === 'string' ? data : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function embeddedLessonMarkdown(path) {
+        if (!embeddedLesson || embeddedLesson.path !== path || embeddedLesson.lang !== 'zh') return null;
+        // 本地联调要读正在修改的源；部署嵌入正文则与本次构建版本一致。
+        if (window.AIFSContentSource && window.AIFSContentSource.isLocal()) return null;
+        return embeddedLesson.markdown;
+      }
+
       function fetchLesson(path, retried) {
         if (certificationLesson && path === certificationLesson.path && typeof certificationLesson.markdown === 'string') {
           lessonQuizPromise = Promise.resolve(certificationLesson.quiz || null);
@@ -3589,11 +3677,14 @@
           : 'https://raw.githubusercontent.com/fancyboi999/ai-engineering-from-scratch-zh/' + ACTIVE_REF + '/' + path + '/docs/zh.md';
         startQuizFetch(path, !!retried);
 
-        fetch(rawUrl, fetchOptions)
-          .then(function (res) {
-            if (!res.ok) throw new Error('fetch-failed');
-            return res.text();
-          })
+        var embeddedMarkdown = embeddedLessonMarkdown(path);
+        var lessonDocument = embeddedMarkdown !== null
+          ? Promise.resolve(embeddedMarkdown)
+          : fetch(rawUrl, fetchOptions).then(function (res) {
+              if (!res.ok) throw new Error('fetch-failed');
+              return res.text();
+            });
+        lessonDocument
           .then(function (md) {
             try {
               renderLesson(md);
@@ -3626,7 +3717,7 @@
       // 客户端逐课 SEO：动态设置 canonical / description / JSON-LD（LearningResource）
       function updateLessonSeo(title, md) {
         var ORIGIN = location.origin;  // 跟随部署域名:fork 部署时 canonical/og:url/JSON-LD 自动指向自己
-        var path = new URLSearchParams(location.search).get('path') || '';
+        var path = lessonPath || '';
         if (!path) return;  // 防御：空 path 会生成 /lessons// 这种坏 canonical
         // canonical 指向预渲染静态页（SEO 主体）；旧 ?path= URL 仅作兼容入口
         var url = ORIGIN + lessonHref(path);
@@ -3645,8 +3736,7 @@
         set('meta[property="og:description"]', desc);
         set('meta[name="twitter:title"]', fullTitle);
         set('meta[name="twitter:description"]', desc);
-        set('meta[property="og:image"]', ORIGIN + '/og-image.png?v=2');   // 社交卡图跟随部署域名
-        set('meta[name="twitter:image"]', ORIGIN + '/og-image.png?v=2');
+        // 服务端 OG helper 已写入版本化课程卡；客户端不能覆盖为旧静态图。
         var ogu = document.querySelector('meta[property="og:url"]');
         if (!ogu) { ogu = document.createElement('meta'); ogu.setAttribute('property', 'og:url'); document.head.appendChild(ogu); }
         ogu.setAttribute('content', url);
@@ -3664,9 +3754,14 @@
           }
           breadcrumbs.push({ '@type': 'ListItem', position: breadcrumbs.length + 1, name: title, item: url });
         } else {
+          var phaseLesson = phaseLessonForPath(path);
+          var phase = phaseLesson && phaseLesson.phase;
+          var hub = phase && /^\/phase\/[a-z0-9-]+$/.test(phase.hub || '') ? phase.hub : '';
           breadcrumbs = [
             { '@type': 'ListItem', position: 1, name: '首页', item: ORIGIN },
-            { '@type': 'ListItem', position: 2, name: '课程表', item: ORIGIN + '/catalog.html' },
+            hub
+              ? { '@type': 'ListItem', position: 2, name: '阶段 ' + String(phase.id).padStart(2, '0') + '：' + phase.name, item: ORIGIN + hub }
+              : { '@type': 'ListItem', position: 2, name: '课程表', item: ORIGIN + '/catalog.html' },
             { '@type': 'ListItem', position: 3, name: title, item: url }
           ];
         }
@@ -4296,7 +4391,7 @@
         mermaid.initialize({
           startOnLoad: false,
           theme: mermaidTheme(),
-          fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+          fontFamily: '"JetBrains Mono", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
           themeVariables: { fontSize: '13px' },
           flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 40, rankSpacing: 50, padding: 12 }
         });
@@ -4423,6 +4518,16 @@
       // 把超出的末字裁掉。渲染后把每个 cluster 标题的 foreignObject 加宽到容纳文字 + 居中。
       function fixMermaidClusterLabels(root) {
         if (!root) return;
+        // Mermaid's max-width:100% fits the whole graph by shrinking its labels.
+        // Keep the measured 13px type instead; the existing viewport scrolls.
+        var svg = root.querySelector('svg');
+        if (svg && svg.viewBox.baseVal.width > 0) {
+          svg.style.width = svg.viewBox.baseVal.width + 'px';
+          svg.style.maxWidth = 'none';
+          root.setAttribute('tabindex', '0');
+          root.setAttribute('role', 'region');
+          root.setAttribute('aria-label', '图表，可横向滚动；聚焦后用方向键浏览');
+        }
         // 非节点的 foreignObject（cluster 标题 / edge label 连线标签 / note）overflow 兜底：
         // 中文测量偏窄导致框算小时，让超出文字显示而非被裁。节点不动（字体修复已够，且加宽会破坏布局）。
         root.querySelectorAll('foreignObject').forEach(function (fo) {

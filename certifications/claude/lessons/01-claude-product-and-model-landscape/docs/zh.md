@@ -152,16 +152,16 @@ Research 不会替你判断来源。长篇报告仍可能引用薄弱证据、�
 
 ```mermaid
 flowchart TD
-    A["Define outcome and constraints"] --> B{"Repeated shared context?"}
-    B -->|"Yes"| C["Project or owned application"]
-    B -->|"No"| D["Fresh chat"]
-    C --> E{"Live external source or action?"}
+    A["明确结果与约束"] --> B{"是否反复使用共享上下文？"}
+    B -->|"是"| C["Project 或自有应用"]
+    B -->|"否"| D["新建聊天"]
+    C --> E{"是否需要实时外部数据源或执行操作？"}
     D --> E
-    E -->|"Yes"| F["Approved connector, Research, or API"]
-    E -->|"No"| G["Provided files or project knowledge"]
-    F --> H["Test smallest plausible model"]
+    E -->|"是"| F["已获批准的连接器、Research 或 API"]
+    E -->|"否"| G["已提供的文件或 Project 知识"]
+    F --> H["测试可能胜任的最小模型"]
     G --> H
-    H --> I["Add evidence and review"]
+    H --> I["补充证据与审查"]
 ```
 
 ## 动手构建

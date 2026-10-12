@@ -69,11 +69,11 @@ Maya 在记忆里搜索连接器的定义；而场景实际在要求她做决策
 
 ```mermaid
 flowchart TD
-    A["State the required outcome"] --> B["Extract constraints"]
-    B --> C["Classify risk and reversibility"]
-    C --> D["Choose the smallest sufficient capability"]
-    D --> E["Add evidence and review"]
-    E --> F["Check maintenance and ownership"]
+    A["明确所需结果"] --> B["提取约束"]
+    B --> C["判断风险与可逆性"]
+    C --> D["选择足以完成任务的最小能力"]
+    D --> E["补充证据与审查"]
+    E --> F["检查维护与责任归属"]
 ```
 
 “足够小的能力面”很重要。若一次性草稿能在安全前提下由直接聊天完成，受管理的 Project 可能多余；若数据源每天更新，粘贴副本可能过期；若工作流会做出有后果的操作，便利性不能凌驾于审批之上。

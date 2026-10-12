@@ -1134,6 +1134,146 @@
     'Attempt one runs to its per-call timeout and returns a typed error instead of hanging the loop. Backoff doubles with jitter before each retry, and a duplicate that races the in-flight attempt collapses into it on the idempotency key. Whatever happens, the loop receives one envelope shape: result or mapped error, never a raw stack trace.': '第一次尝试运行到单次调用超时，随后返回类型化错误，而不是卡死循环。每次重试前，退避时间都会加倍并加入抖动；与进行中尝试竞态的重复请求，会通过幂等 key 折叠进同一次调用。无论发生什么，循环只收到一种信封形状：结果或已映射错误，绝不是原始堆栈跟踪。'
   };
 
+  // 已实见的核心图表漏译：只按 widget ID 和完整文案匹配，保留 provider、
+  // option value、数值、协议与实验输出。未知文案不猜译。
+  var READER_TEXT = {
+    "v4-vision-pipeline": {
+      "one request through the chain": "一次请求走完整条链路",
+      "decode + detect": "解码 + 检测",
+      "crop + resize": "裁剪 + 缩放",
+      "validated JSON out": "输出已校验的 JSON",
+      "VISION CAPSTONE · THE PIPELINE": "视觉综合项目 · 流水线",
+      "detect, crop, classify, validate": "检测、裁剪、分类、校验",
+      "A production vision service is a chain of contracts: decode the bytes, detect boxes, crop each box, classify the crop, then assemble one structured response. Every arrow is an interface that can fail silently (coordinate order, normalisation, resize interpolation), which is why the output passes through a Pydantic schema before it leaves the service. Swap the detector or the classifier freely; the skeleton stays.": "生产视觉服务由一串契约连接而成：解码字节、检测边界框、逐框裁剪、对裁剪图分类，再组装成一份结构化响应。每条箭头都是接口，都可能悄悄出错（坐标顺序、归一化、缩放插值），因此输出必须经过 Pydantic schema 校验才能离开服务。检测器或分类器可以替换，流水线骨架不变。"
+    },
+    "data-augmentation": {
+      "DATA AUGMENTATION": "数据增强",
+      "pick a transform": "选择变换方式",
+      "source": "原图",
+      "horizontal flip": "水平翻转",
+      "rotate 90": "旋转 90 度",
+      "random crop": "随机裁剪",
+      "color jitter": "颜色扰动",
+      "augment(x) preserves the label while changing the pixels  ·  the model sees more variation, generalizes better": "augment(x) 改变像素但保留标签  ·  模型见到更多变化，泛化更好",
+      "Augmentation applies label-preserving transforms — flips, rotations, crops, color shifts — to each training image, so one labelled example becomes many. The network never sees the exact same input twice and learns features that survive these changes, which expands the effective dataset and curbs overfitting without collecting more data.": "数据增强对每张训练图像施加不改变标签的变换，如翻转、旋转、裁剪和颜色偏移，把一个带标签样本变成多个。网络每次见到的输入都不同，由此学习在这些变化下仍然稳定的特征。不用收集更多数据，就能扩大有效数据集并抑制过拟合。"
+    },
+    "clip-contrastive": {
+      "text embeddings →": "文本嵌入 →",
+      "img": "图像",
+      "matching (image, caption) — pull together": "匹配图文对：拉近",
+      "mismatched pairs — push apart": "不匹配图文对：推远",
+      "softmax over each row and column": "逐行、逐列计算 softmax",
+      "drives the diagonal high": "提高对角线上的得分",
+      "CLIP · CONTRASTIVE MATRIX": "CLIP · 对比矩阵",
+      "matching pairs land on the diagonal": "匹配图文对位于对角线",
+      "CLIP embeds images and captions into one shared space. For a batch of N pairs it builds an NxN similarity matrix and trains so the diagonal (true pairs) scores high and every off-diagonal scores low. Watch the diagonal brighten as matching pairs are pulled together and mismatches pushed apart.": "CLIP 将图像与图像描述嵌入同一个共享空间。对一批 N 个图文对，它构建 NxN 相似度矩阵，通过训练让对角线上的真实配对得分高、非对角线上的配对得分低。匹配图文对被拉近，不匹配的被推远，对角线也随之变亮。"
+    },
+    "l5-vlm-recipe-knobs": {
+      "impact on final benchmarks": "对最终基准成绩的影响",
+      "encoder": "编码器",
+      "connector": "连接器",
+      "LLM size": "LLM 规模",
+      "data mix": "数据混合",
+      "resolution": "分辨率",
+      "turn this first": "先调这一项",
+      "VLM RECIPE KNOBS": "VLM 配方调节项",
+      "the ablation-stable ranking": "消融实验中稳定的影响排序",
+      "The ranking that survives across the MM1, Idefics2, Cambrian-1, and Prismatic ablation tables. Data mixture moves benchmarks most, the image encoder is next, and the connector, the knob most papers obsess over, matters least. When a VLM underperforms, reach for the tallest fader first.": "MM1、Idefics2、Cambrian-1 和 Prismatic 的消融实验表都呈现出这一稳定排序：数据混合对基准成绩影响最大，图像编码器其次，而多数论文反复研究的连接器影响最小。VLM 表现不佳时，先调最高的那根滑杆。"
+    },
+    "l5-onevision-budget": {
+      "~3-4K visual tokens": "约 3-4K 个视觉 token",
+      "single image: AnyRes tiles, ~2900 tok": "单图：AnyRes 分块，约 2900 个 token",
+      "multi-image: 6 images x 729 tok each": "多图：6 张图 x 每张 729 个 token",
+      "video: 32 frames x 81 tok, pooled": "视频：32 帧 x 每帧池化后 81 个 token",
+      "ONEVISION TOKEN BUDGET": "OneVision token 预算",
+      "same jar, three packings": "同一预算，三种装法",
+      "LLaVA-OneVision holds the visual-token budget roughly constant at a few thousand tokens per sample and just repacks it: one image at high AnyRes resolution, several images at moderate resolution, or 32 video frames pooled down to 81 tokens each. Because every scenario costs about the same, one model trains on all three without any of them dominating.": "LLaVA-OneVision 将每个样本的视觉 token 预算大致固定在几千个，只改变分配方式：一张高 AnyRes 分辨率图像、几张中等分辨率图像，或 32 帧视频，每帧池化为 81 个 token。各场景开销接近，同一个模型便能同时学习三种场景，不会让某一种独占训练。"
+    },
+    "mm-mrope-axes": {
+      "temporal": "时间",
+      "height": "高度",
+      "width": "宽度",
+      "M-RoPE: one position, three rotations": "M-RoPE：一个位置，三种旋转",
+      "time slowest · width fastest": "时间轴最慢 · 宽度轴最快",
+      "M-ROPE THREE AXES": "M-RoPE 三轴",
+      "time, height, width rotate apart": "时间、高度、宽度分别旋转",
+      "Qwen2-VL gives every token a three-part position and rotates each part on its own axis: temporal, height, and width. The temporal axis turns slowly so a frame an hour later still sits at a distinct phase, while the spatial axes turn faster to encode a patch grid. One absolute-table-free scheme covers a single image, a multi-image batch, and a long video at once.": "Qwen2-VL 将每个 token 的位置分为时间、高度和宽度三部分，各自沿对应轴旋转。时间轴转得慢，让一小时后的帧仍处于不同相位；空间轴转得更快，用来编码图像分块网格。不依赖绝对位置表，同一套方案就能覆盖单图、多图批次和长视频。"
+    },
+    "a5-orchestrator-scale": {
+      "simple query: 1 subagent": "简单查询：1 个子 agent",
+      "medium: 3 subagents": "中等查询：3 个子 agent",
+      "complex research: 10+ subagents": "复杂研究：10+ 个子 agent",
+      "lead": "主 agent",
+      "plans + synthesizes": "规划 + 综合",
+      "15x tokens": "15x token 用量",
+      "scale effort to query complexity  ·  each subagent buys a fresh context window": "按查询复杂度投入资源  ·  每个子 agent 获得独立的新上下文窗口",
+      "ORCHESTRATOR SCALE": "编排规模",
+      "spawn to match the query": "按查询需求创建子 agent",
+      "Anthropic's Research system scales effort to query complexity: one agent with a few tool calls for simple lookups, three for medium queries, ten or more parallel subagents for complex research. It beat single-agent Opus 4 by 90.2%, token usage alone explained 80% of BrowseComp variance, and the bill is 15x tokens per query plus rainbow deploys for the long-running agents.": "Anthropic 的 Research 系统按查询复杂度投入资源：简单检索由一个 agent 调用几次工具完成，中等查询使用三个 agent，复杂研究则并行使用十个或更多子 agent。它比单 agent Opus 4 的表现高出 90.2%；仅 token 用量就能解释 BrowseComp 成绩方差的 80%。代价是每次查询消耗 15x 的 token，还需要为长时间运行的 agent 采用彩虹部署（rainbow deploys）。"
+    },
+    "agent-loop": {
+      "Think: Read the goal and trajectory, then form a plan. The loop stops only when the goal is met or its step budget runs out.": "思考：阅读目标和已有轨迹，再制定计划。循环只在达成目标或耗尽步数预算时停止。",
+      "Chosen action: Select search_web because current evidence is missing. The loop stops only when the goal is met or its step budget runs out.": "选定行动：当前缺少证据，因此选择 search_web。循环只在达成目标或耗尽步数预算时停止。",
+      "Tool call: Send the chosen tool its explicit query arguments. The loop stops only when the goal is met or its step budget runs out.": "工具调用：将明确的查询参数发送给选定的工具。循环只在达成目标或耗尽步数预算时停止。",
+      "Tool result: The tool returns a metro population result. The loop stops only when the goal is met or its step budget runs out.": "工具结果：工具返回都市圈人口结果。循环只在达成目标或耗尽步数预算时停止。",
+      "Observe: Notice that metro population does not answer city proper. The loop stops only when the goal is met or its step budget runs out.": "观察：发现都市圈人口并不能回答城区本身的人口问题。循环只在达成目标或耗尽步数预算时停止。",
+      "Context update: Append the result and scope mismatch to the trajectory. The loop stops only when the goal is met or its step budget runs out.": "更新上下文：将结果和范围不匹配的情况追加到轨迹中。循环只在达成目标或耗尽步数预算时停止。",
+      "Think again: Use the updated context to refine the next plan. The loop stops only when the goal is met or its step budget runs out.": "再次思考：根据更新后的上下文完善下一步计划。循环只在达成目标或耗尽步数预算时停止。",
+      "Chosen action: Choose a narrower search with the corrected scope. The loop stops only when the goal is met or its step budget runs out.": "选定行动：按修正后的范围选择更精确的搜索。循环只在达成目标或耗尽步数预算时停止。",
+      "Tool call: Request the population for Tokyo city proper. The loop stops only when the goal is met or its step budget runs out.": "工具调用：查询东京城区本身的人口。循环只在达成目标或耗尽步数预算时停止。",
+      "Tool result: The tool returns the scoped population evidence. The loop stops only when the goal is met or its step budget runs out.": "工具结果：工具返回符合所需范围的人口证据。循环只在达成目标或耗尽步数预算时停止。",
+      "Observe: Confirm that this result matches the requested scope. The loop stops only when the goal is met or its step budget runs out.": "观察：确认结果符合请求的范围。循环只在达成目标或耗尽步数预算时停止。",
+      "Context update: Store the supported answer so the next thought can finish. The loop stops only when the goal is met or its step budget runs out.": "更新上下文：保存有证据支持的答案，让下一轮思考可以结束。循环只在达成目标或耗尽步数预算时停止。"
+    }
+  };
+
+  var READER_PATTERNS = {
+    'cnn-param-count': [
+      ['lf-meta', /^a dense layer on the same (\d+x\d+) map = ([\d.]+[KMB]?) params  ·  ([\d.]+[KMB]?)x more$/, '同样的 $1 特征图使用全连接层 = $2 个参数  ·  参数量为卷积层的 $3 倍'],
+      ['lf-formula', /^(conv = \(K·K·Cin \+ 1\)·Cout = \(\d+·\d+·\d+ \+ 1\)·\d+)   ·   independent of spatial size$/, '$1   ·   与空间尺寸无关']
+    ],
+    'data-augmentation': [
+      ['lf-meta', /^each pass yields a fresh view  ·  (\d+) images x (\d+) = ([\d,]+) effective examples$/, '每轮生成新视图  ·  $1 张图像 x $2 = $3 个有效样本'],
+      ['text', /^aug (\d+)$/, '增强 $1']
+    ]
+  };
+  var MOTION_ARIA = {
+    'Pause explanatory animation': '暂停讲解动画',
+    'Play explanatory animation': '播放讲解动画',
+    'Replay explanatory animation': '重播讲解动画'
+  };
+
+  function translateReaderTree(host, name) {
+    var map = READER_TEXT[name] || {};
+    var patterns = READER_PATTERNS[name] || [];
+    host.querySelectorAll('*').forEach(function (node) {
+      var tag = (node.tagName || '').toLowerCase();
+      for (var parent = node; parent && parent !== host; parent = parent.parentNode) {
+        if (/^(pre|code|script|style)$/i.test(parent.tagName || '')) return;
+      }
+      for (var i = 0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if (child.nodeType !== 3) continue;
+        var key = child.nodeValue;
+        if (Object.prototype.hasOwnProperty.call(map, key)) {
+          child.nodeValue = map[key];
+          continue;
+        }
+        for (var j = 0; j < patterns.length; j++) {
+          var rule = patterns[j];
+          var field = rule[0] === 'text' ? tag === 'text'
+            : (' ' + (node.getAttribute('class') || '') + ' ').indexOf(' ' + rule[0] + ' ') !== -1;
+          if (field && rule[1].test(key)) { child.nodeValue = key.replace(rule[1], rule[2]); break; }
+        }
+      }
+      var cls = ' ' + (node.getAttribute('class') || '') + ' ';
+      if (cls.indexOf(' lf-motion-toggle ') !== -1 || cls.indexOf(' lf-motion-replay ') !== -1) {
+        var aria = node.getAttribute('aria-label');
+        if (MOTION_ARIA[aria]) node.setAttribute('aria-label', MOTION_ARIA[aria]);
+      }
+    });
+  }
+
   function zhCtrl(t) {
     var key = t.trim();
     if (C[key]) return C[key];
@@ -1189,6 +1329,44 @@
     });
   }
 
+  // Only the figures with verified small-screen text are displayed at a readable
+  // scale. Keep SVG coordinates, text, inputs and animation trees untouched.
+  var READABLE_FIGURES = {
+    'v4-vision-pipeline': true, 'clip-contrastive': true,
+    'data-augmentation': true, 'l5-vlm-recipe-knobs': true,
+    'l5-onevision-budget': true, 'mm-mrope-axes': true,
+    'tp-tool-loop': true, 'agent-loop': true, 'a5-orchestrator-scale': true
+  };
+
+  function displayReadableFigure(host, name) {
+    if (!READABLE_FIGURES[name]) return;
+    host.querySelectorAll('svg').forEach(function (svg) {
+      var box = (svg.getAttribute('viewBox') || '').trim().split(/\s+/).map(Number);
+      var smallest = Infinity;
+      svg.querySelectorAll('text').forEach(function (node) {
+        var size = parseFloat(node.getAttribute('font-size'));
+        if (size > 0) smallest = Math.min(smallest, size);
+      });
+      if (!(box[2] > 0) || !isFinite(smallest)) return;
+      var parent = svg.parentNode;
+      if (parent.getAttribute('class') !== 'lf-readable-viewport') {
+        var hint = document.createElement('div');
+        hint.setAttribute('class', 'lf-readability-hint');
+        hint.textContent = '图内文字按可读尺寸显示；可横向滑动，或聚焦图表后用方向键浏览。';
+        var viewport = document.createElement('div');
+        viewport.setAttribute('class', 'lf-readable-viewport');
+        viewport.setAttribute('tabindex', '0');
+        viewport.setAttribute('role', 'region');
+        viewport.setAttribute('aria-label', '可横向滚动的图表');
+        parent.insertBefore(hint, svg);
+        parent.insertBefore(viewport, svg);
+        viewport.appendChild(svg);
+      }
+      // Scale the whole drawing, not its text: preserve the mathematical layout.
+      svg.style.minWidth = Math.ceil(box[2] * Math.max(1, 12 / smallest)) + 'px';
+    });
+  }
+
   function applyFigureI18n(root) {
     (root || document).querySelectorAll('.lesson-figure[data-figure]').forEach(function (host) {
       if (!host.dataset.lfMounted) return;
@@ -1203,6 +1381,8 @@
       translateCtrls(host);
       translateSvgText(host, name);
       translateProviderTree(host);
+      translateReaderTree(host, name);
+      displayReadableFigure(host, name);
       var cap = host.querySelector('.lf-cap');
       if (cap && CAP[name]) cap.textContent = CAP[name];
       if (host.dataset.lfI18n) return;
@@ -1213,6 +1393,8 @@
           translateCtrls(host);
           translateSvgText(host, name);
           translateProviderTree(host);
+          translateReaderTree(host, name);
+          displayReadableFigure(host, name);
         } catch (e) {}
       }
       host.addEventListener('input', retranslate);

@@ -1,6 +1,6 @@
 ---
 name: agent-loop
-description: Write a correct, minimal ReAct agent loop in any target language/runtime with tools, stop condition, and turn budget.
+description: 使用任意目标语言或运行时，编写正确、精简的 ReAct agent 循环，包含工具、停止条件和轮次预算。
 version: 1.0.0
 phase: 14
 lesson: 01

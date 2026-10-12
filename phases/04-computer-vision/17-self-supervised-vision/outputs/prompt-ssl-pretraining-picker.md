@@ -1,6 +1,6 @@
 ---
 name: prompt-ssl-pretraining-picker
-description: Pick SimCLR / MAE / DINOv2 given dataset size, compute, and downstream task
+description: 根据数据集规模、算力和下游任务，选择 SimCLR / MAE / DINOv2。
 phase: 4
 lesson: 17
 ---

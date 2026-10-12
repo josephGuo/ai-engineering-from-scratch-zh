@@ -460,10 +460,11 @@ function writeMarkdown(file, { name, description, version }) {
 
 test('shared site asset families use the expected cache keys on every page', () => {
   const release = '20260831a';
-  const appRelease = '20260831b';
-  const styleRelease = '20260831a';
-  const navigationRelease = '20260831b';
+  const appRelease = '20261012b';
+  const styleRelease = '20261012e';
+  const navigationRelease = '20261012b';
   const narrationRelease = '20260831a';
+  const roadmapRelease = '20261012e';
   const pages = [
     'about.html',
     'assessment.html',
@@ -486,13 +487,19 @@ test('shared site asset families use the expected cache keys on every page', () 
   for (const page of pages) {
     const source = sourceFor(page);
     assert.equal(versionFor(source, 'style.css'), styleRelease, `${page} has stale style.css`);
+    for (const asset of ['learning-paths.css', 'roadmap.css', 'intelligence-check.css', 'certifications.css']) {
+      if (source.includes(asset + '?v=')) assert.equal(versionFor(source, asset), styleRelease, `${page} has stale ${asset}`);
+    }
     assert.equal(versionFor(source, 'progress.js'), release, `${page} has stale progress.js`);
     assert.equal(versionFor(source, 'header.js'), navigationRelease, `${page} has stale header.js`);
+    assert.equal(versionFor(source, 'cmdpalette.js'), '20261012b', `${page} has stale cmdpalette.js`);
+    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), '20261012b', `${page} has stale certifications.js`);
   }
 
   assert.equal(versionFor(sourceFor('index.html'), 'app.js'), appRelease);
-  assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.css'), release);
-  assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.js'), release);
+  assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.css'), styleRelease);
+  assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.js'), roadmapRelease);
+  assert.equal(versionFor(sourceFor('developer.html'), 'header.js'), navigationRelease);
   assert.match(
     fs.readFileSync(path.join(__dirname, 'header.js'), 'utf8'),
     new RegExp(`NARRATION_VERSION = '${narrationRelease}'`)
@@ -1646,9 +1653,9 @@ test('learning path query and Enter fallback open the first result predictably',
 test('career lessons return to their exact learning paths guide without a fake catalog search', () => {
   const lessonHtml = fs.readFileSync(path.join(__dirname, 'lesson.html'), 'utf8');
 
-  assert.match(lessonHtml, /var pathReturnHref = 'catalog\.html';/);
+  assert.match(lessonHtml, /var pathReturnHref = '\/catalog\.html';/);
   assert.match(lessonHtml, /if \(learningPath\.kind === 'career-route'\)/);
-  assert.match(lessonHtml, /pathReturnHref = 'learning-paths\.html#career-route-' \+ encodeURIComponent\(learningPath\.id\);/);
+  assert.match(lessonHtml, /pathReturnHref = '\/learning-paths\.html#career-route-' \+ encodeURIComponent\(learningPath\.id\);/);
   assert.match(lessonHtml, /pathReturnLabel = '返回职业路线';/);
   assert.match(lessonHtml, /href="' \+ pathReturnHref \+ '">&larr; ' \+ pathReturnLabel/);
   assert.doesNotMatch(lessonHtml, /catalog\.html\?q=' \+ encodeURIComponent\(learningPath\.title/);
@@ -1772,7 +1779,7 @@ test('lesson reader keeps learning-path context and renders a copyable full-dept
   assert.match(lessonHtml, /fetch\(quizUrl, fetchOptions\)/);
   assert.doesNotMatch(lessonHtml, /<script src="figures(?:\.js|-(?!manifest))/);
   assert.match(lessonHtml, /<script src="figure-manifest\.js/);
-  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261009a/);
+  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261013b/);
   assert.match(lessonHtml, /<script src="progress\.js\?v=20260831a/);
   assert.match(fs.readFileSync(path.join(__dirname, 'lesson-figures.js'), 'utf8'), /providerBaseUrl \+ provider/);
   assert.match(lessonHtml, /import\('https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11/);

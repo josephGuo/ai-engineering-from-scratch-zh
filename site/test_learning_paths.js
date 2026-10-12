@@ -202,7 +202,7 @@ test('career guidance states the prerequisite and employment boundaries', () => 
 });
 
 test('learning paths stays navigable on narrow screens and uses a neutral root', () => {
-  assert.match(learningPaths, /<title>AI 工程学习路径 - AI Engineering from Scratch 简体中文版<\/title>/);
+  assert.match(learningPaths, /<title>AI 工程学习路径 - AI 工程从零开始 · 简体中文版<\/title>/);
   assert.match(learningPaths, /<span class="learning-paths-eyebrow">4 条核心路径 · 6 条职业路线<\/span>/);
   assert.match(learningPaths, /<h1 id="learningPathsTitle">AI 工程学习路径<\/h1>/);
   assert.match(learningPaths, /class="learning-paths-entry-nav"[\s\S]*?href="#overview"[\s\S]*?href="#career-routes"/);
@@ -249,7 +249,7 @@ test('career chooser hash navigation reveals and focuses a guide', () => {
 
 test('learning paths shares the site theme preference', () => {
   assert.match(learningPaths, /<script src="learning-paths\.js\?v=20260831a"><\/script>/);
-  assert.match(learningPaths, /<link rel="stylesheet" href="learning-paths\.css\?v=20260831a">/);
+  assert.match(learningPaths, /<link rel="stylesheet" href="learning-paths\.css\?v=20261012e">/);
   assert.match(learningPathsJs, /localStorage\.getItem\('theme'\)/);
   assert.match(learningPathsJs, /localStorage\.setItem\('theme', theme\)/);
   assert.match(learningPathsJs, /prefers-color-scheme: dark/);
