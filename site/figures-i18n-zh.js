@@ -1137,6 +1137,18 @@
   // 已实见的核心图表漏译：只按 widget ID 和完整文案匹配，保留 provider、
   // option value、数值、协议与实验输出。未知文案不猜译。
   var READER_TEXT = {
+    "04-context-cache": {
+      "PROMPT CACHE HIT": "Prompt 缓存命中",
+      "SEMANTIC CACHE": "语义缓存",
+      "drag prefix and hit rate": "拖动前缀占比与命中率",
+      "drag the threshold": "拖动阈值",
+      "shared prefix (% of prompt)": "共享前缀（占 prompt %）",
+      "cache hit rate (%)": "缓存命中率（%）",
+      "similarity threshold": "相似度阈值",
+      "% prefill saved": "% 预填充计算节省量",
+      "A long system prompt or document that repeats across calls can be prefilled once and reused. The cached prefix (dashed) skips recomputation, so only the new suffix (solid) is processed. The saving is the hit rate times the prefix fraction: a big shared prefix that is hit often is where caching pays off most.": "重复出现的长系统 prompt 或文档可以预填充一次并复用。虚线表示缓存前缀，它跳过重复计算，只有新的实线后缀需要处理。节省量等于命中率乘以前缀占比：共享前缀越大、命中越频繁，缓存收益越高。",
+      "A semantic cache answers a new query from a stored answer when their embeddings are close enough. Each dot is an incoming query placed by its cosine similarity to the nearest cached entry; the shaded zone past the orange line is served from cache. Raise the threshold and you get fewer hits but rarely serve a wrong answer; lower it and you cache more but risk returning a stale or mismatched reply (orange dots).": "语义缓存会在新 query 与已缓存答案的 embedding 足够接近时直接复用答案。每个点表示一条进入的 query，按它与最近缓存项的余弦相似度排列；橙线之后的阴影区从缓存返回。提高阈值会减少命中却很少答错；降低阈值会增加命中，也更容易返回过期或不匹配的回答（橙色点）。"
+    },
     "v4-vision-pipeline": {
       "one request through the chain": "一次请求走完整条链路",
       "decode + detect": "解码 + 检测",
@@ -1228,6 +1240,16 @@
   };
 
   var READER_PATTERNS = {
+    '04-context-cache': [
+      ['text', /^cached prefix (\d+)%$/, '缓存前缀 $1%'],
+      ['text', /^new (\d+)%$/, '新增 $1%'],
+      ['small', /^of (\d+) served from cache$/, '条由缓存返回（共 $1 条）'],
+      ['lf-meta', /^hit rate (\d+)%  ·  cached prefix skips recompute  ·  cost and time-to-first-token both drop by ~(\d+)%$/, '命中率 $1%  ·  缓存前缀跳过重复计算  ·  成本和首个 token 延迟均降低约 $2%'],
+      ['lf-meta', /^threshold ([\d.]+)  ·  (\d+) of those hits return a wrong answer  ·  high: few hits, safe$/, '阈值 $1  ·  命中中有 $2 条返回错误答案  ·  高阈值：命中少，安全'],
+      ['lf-meta', /^threshold ([\d.]+)  ·  (\d+) of those hits return a wrong answer  ·  low: many hits, risky$/, '阈值 $1  ·  命中中有 $2 条返回错误答案  ·  低阈值：命中多，风险高'],
+      ['lf-meta', /^threshold ([\d.]+)  ·  (\d+) of those hits return a wrong answer  ·  balanced$/, '阈值 $1  ·  命中中有 $2 条返回错误答案  ·  均衡'],
+      ['lf-formula', /^serve cached answer when (cos\(query, cached\) ≥ [\d.]+)  ·  lower threshold = more hits, more risk$/, '当 $1 时返回缓存答案  ·  阈值越低 = 命中越多，风险越高']
+    ],
     'cnn-param-count': [
       ['lf-meta', /^a dense layer on the same (\d+x\d+) map = ([\d.]+[KMB]?) params  ·  ([\d.]+[KMB]?)x more$/, '同样的 $1 特征图使用全连接层 = $2 个参数  ·  参数量为卷积层的 $3 倍'],
       ['lf-formula', /^(conv = \(K·K·Cin \+ 1\)·Cout = \(\d+·\d+·\d+ \+ 1\)·\d+)   ·   independent of spatial size$/, '$1   ·   与空间尺寸无关']
@@ -1261,11 +1283,13 @@
         }
         for (var j = 0; j < patterns.length; j++) {
           var rule = patterns[j];
-          var field = rule[0] === 'text' ? tag === 'text'
+          var field = rule[0] === 'text' || rule[0] === 'small' ? tag === rule[0]
             : (' ' + (node.getAttribute('class') || '') + ' ').indexOf(' ' + rule[0] + ' ') !== -1;
           if (field && rule[1].test(key)) { child.nodeValue = key.replace(rule[1], rule[2]); break; }
         }
       }
+      var readerAria = node.getAttribute('aria-label');
+      if (name === '04-context-cache' && Object.prototype.hasOwnProperty.call(map, readerAria)) node.setAttribute('aria-label', map[readerAria]);
       var cls = ' ' + (node.getAttribute('class') || '') + ' ';
       if (cls.indexOf(' lf-motion-toggle ') !== -1 || cls.indexOf(' lf-motion-replay ') !== -1) {
         var aria = node.getAttribute('aria-label');
@@ -1335,7 +1359,8 @@
     'v4-vision-pipeline': true, 'clip-contrastive': true,
     'data-augmentation': true, 'l5-vlm-recipe-knobs': true,
     'l5-onevision-budget': true, 'mm-mrope-axes': true,
-    'tp-tool-loop': true, 'agent-loop': true, 'a5-orchestrator-scale': true
+    'tp-tool-loop': true, 'agent-loop': true, 'a5-orchestrator-scale': true,
+    '04-context-cache': true
   };
 
   function displayReadableFigure(host, name) {

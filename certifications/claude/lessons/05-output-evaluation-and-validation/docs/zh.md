@@ -109,12 +109,12 @@ Anthropic 的能力入门课程把诊断归纳为四种模型属性。把它们�
 
 ```mermaid
 flowchart TD
-    A["Candidate output"] --> B["Deterministic checks"]
-    B --> C["Evidence and rubric review"]
-    C --> D["Independent comparison or adversarial review"]
-    D --> E["Human decision gate"]
-    E -->|"pass"| F["Publish or act"]
-    E -->|"revise"| G["Correct and record failure"]
+    A["候选输出"] --> B["确定性检查"]
+    B --> C["证据与评分标准审核"]
+    C --> D["独立比对或对抗性审核"]
+    D --> E["人工决策关卡"]
+    E -->|"通过"| F["发布或执行"]
+    E -->|"修订"| G["纠正并记录失败"]
     G --> B
 ```
 

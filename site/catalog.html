@@ -235,6 +235,11 @@
       border-top: 1px solid var(--rule-soft);
     }
 
+    .catalog-progressive-actions[hidden],
+    .catalog-progressive-button[hidden] {
+      display: none;
+    }
+
     .catalog-progressive-note {
       color: var(--ink-mute);
       font-family: var(--font-mono);
@@ -379,7 +384,7 @@
         </select>
       </div>
       <div class="catalog-count" id="catalogCount"></div>
-      <div class="catalog-table-wrap">
+      <div class="catalog-table-wrap" id="catalogTableWrap" aria-busy="true">
         <table class="catalog-table" id="catalogTable">
           <thead>
             <tr>
@@ -1114,7 +1119,15 @@
             return 0;
           });
 
-          countEl.textContent = '共 ' + allRows.length + ' 节，显示 ' + rows.length + ' 节';
+          var visibleRows = rows.slice(0, visibleLimit);
+          countEl.textContent = '共 ' + allRows.length + ' 节，显示 ' + visibleRows.length + ' / ' + rows.length + ' 节';
+          tableWrap.setAttribute('aria-busy', 'false');
+          var remaining = rows.length - visibleRows.length;
+          progressiveActions.hidden = remaining <= 0;
+          progressiveNote.textContent = remaining > 0 ? '还有 ' + remaining + ' 节符合筛选条件的课程' : '';
+          showMoreButton.textContent = '再显示 ' + Math.min(PAGE_SIZE, remaining) + ' 节';
+          showMoreButton.hidden = remaining <= 0;
+          showAllButton.hidden = remaining <= 0;
 
           if (rows.length === 0) {
             bodyEl.innerHTML = '<tr><td colspan="5" class="catalog-empty">没有符合筛选条件的课程</td></tr>';
@@ -1153,36 +1166,52 @@
           }
           bodyEl.innerHTML = html;
 
-          var remaining = rows.length - visibleRows.length;
-          progressiveActions.hidden = remaining <= 0;
-          progressiveNote.textContent = remaining > 0 ? remaining + ' matching lessons remain.' : '';
-          showMoreButton.textContent = 'Show next ' + Math.min(PAGE_SIZE, remaining);
-          showMoreButton.hidden = remaining <= 0;
-          showAllButton.hidden = remaining <= 0;
         }
 
-        var urlQuery = new URLSearchParams(window.location.search).get('q');
-        if (urlQuery) {
+        function updateSortHeaders() {
+          document.querySelectorAll('.catalog-table th[data-sort]').forEach(function (header) {
+            var active = header.getAttribute('data-sort') === sortCol;
+            header.setAttribute('aria-sort', active ? (sortDir === 1 ? 'ascending' : 'descending') : 'none');
+            header.querySelector('.sort-arrow').textContent = active ? (sortDir === 1 ? ' \u25B2' : ' \u25BC') : '';
+          });
+        }
+
+        function applyUrlState(focusSearch) {
+          var params = new URLSearchParams(window.location.search);
+          var urlQuery = params.get('q') || '';
+          var urlPhase = params.get('phase') || '';
+          var urlStatus = params.get('status') || '';
+          var urlSort = params.get('sort') || 'phase';
+          var urlDir = params.get('dir') || 'asc';
           searchInput.value = urlQuery;
           phaseSelect.value = Array.prototype.some.call(phaseSelect.options, function (option) { return option.value === urlPhase; }) ? urlPhase : '';
           statusSelect.value = Array.prototype.some.call(statusSelect.options, function (option) { return option.value === urlStatus; }) ? urlStatus : '';
           sortCol = ['phase', 'name', 'type', 'lang', 'status'].indexOf(urlSort) !== -1 ? urlSort : 'phase';
           sortDir = urlDir === 'desc' ? -1 : 1;
           visibleLimit = PAGE_SIZE;
-          document.querySelectorAll('.catalog-table th[data-sort]').forEach(function (header) {
-            var active = header.getAttribute('data-sort') === sortCol;
-            header.setAttribute('aria-sort', active ? (sortDir === 1 ? 'ascending' : 'descending') : 'none');
-            header.querySelector('.sort-arrow').textContent = active ? (sortDir === 1 ? ' \u25B2' : ' \u25BC') : '';
-          });
+          updateSortHeaders();
           render();
           if (focusSearch && urlQuery) {
             try { searchInput.focus({ preventScroll: true }); } catch (_) { searchInput.focus(); }
           }
         }
 
-        searchInput.addEventListener('input', render);
-        phaseSelect.addEventListener('change', render);
-        statusSelect.addEventListener('change', render);
+        function changeFilters(mode) {
+          visibleLimit = PAGE_SIZE;
+          syncUrl(mode);
+          render();
+        }
+        searchInput.addEventListener('input', function () { changeFilters('replace'); });
+        phaseSelect.addEventListener('change', function () { changeFilters('push'); });
+        statusSelect.addEventListener('change', function () { changeFilters('push'); });
+        showMoreButton.addEventListener('click', function () {
+          visibleLimit += PAGE_SIZE;
+          render();
+        });
+        showAllButton.addEventListener('click', function () {
+          visibleLimit = allRows.length;
+          render();
+        });
 
         document.querySelectorAll('.catalog-table th[data-sort]').forEach(function (th) {
           th.addEventListener('click', function () {
@@ -1193,10 +1222,8 @@
               sortCol = col;
               sortDir = 1;
             }
-            document.querySelectorAll('.catalog-table th .sort-arrow').forEach(function (a) {
-              a.textContent = '';
-            });
-            th.querySelector('.sort-arrow').textContent = sortDir === 1 ? ' \u25B2' : ' \u25BC';
+            visibleLimit = PAGE_SIZE;
+            updateSortHeaders();
             syncUrl('push');
             render();
           });

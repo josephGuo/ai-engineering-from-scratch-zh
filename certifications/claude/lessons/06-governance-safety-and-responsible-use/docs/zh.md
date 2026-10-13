@@ -115,15 +115,15 @@ Authority: May this role make or execute the decision?
 
 ```mermaid
 flowchart TD
-    A["Classify data and use"] --> B{"Approved purpose and surface?"}
-    B -->|"no or unknown"| C["Stop and escalate"]
-    B -->|"yes"| D["Generate bounded draft"]
-    D --> E["Run privacy, evidence, and fairness checks"]
-    E --> F{"High impact or irreversible?"}
-    F -->|"yes"| G["Authorized human reviews evidence and approves"]
-    F -->|"no"| H["Release under documented policy"]
-    G -->|"reject"| I["Revise, record, or close"]
-    G -->|"approve"| H
+    A["对数据与用途分类"] --> B{"用途与使用界面已获批准？"}
+    B -->|"否或未知"| C["停止并上报"]
+    B -->|"是"| D["生成限定范围的草稿"]
+    D --> E["执行隐私、证据与公平性检查"]
+    E --> F{"影响重大或不可逆？"}
+    F -->|"是"| G["获授权的审核者审查证据并批准"]
+    F -->|"否"| H["按已记录的政策发布"]
+    G -->|"拒绝"| I["修订、记录或关闭"]
+    G -->|"批准"| H
 ```
 
 审核者需要看到来源证据、模型输出、不确定性、政策约束和拟执行操作。只有一个批准按钮，只会形成仪式化监督。

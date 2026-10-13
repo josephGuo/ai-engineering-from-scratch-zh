@@ -134,13 +134,13 @@ Anthropic API 官方文档明确指出，即使 temperature 为零，也不是�
 
 ```mermaid
 flowchart LR
-    A["Classify task and consequence"] --> B["Try smallest qualified model"]
-    B --> C{"Meets measured gate?"}
-    C -->|"Yes"| D["Return for normal review"]
-    C -->|"No"| E["Diagnose failure layer"]
-    E --> F{"Capability failure?"}
-    F -->|"Yes"| G["Escalate model or thinking mode"]
-    F -->|"No"| H["Repair source, prompt, context, or workflow"]
+    A["判断任务类型及其后果"] --> B["先试满足要求的最小模型"]
+    B --> C{"达到实测验收门槛？"}
+    C -->|"是"| D["转入常规审核"]
+    C -->|"否"| E["定位失败所在层"]
+    E --> F{"模型能力不足？"}
+    F -->|"是"| G["升级模型或思考模式"]
+    F -->|"否"| H["修复来源、prompt、上下文或工作流"]
 ```
 
 ### 缓存、批处理和限制解决不同问题

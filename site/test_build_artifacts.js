@@ -298,7 +298,7 @@ function loadProgressRuntime(seed = {}) {
   return { api: context.window.AIFSProgress, storage };
 }
 
-function loadFigureRuntime({ reducedMotion = false } = {}) {
+function loadFigureRuntime({ reducedMotion = false, runtimeConsole = console } = {}) {
   let nextFrame = 0;
   let cancelledFrames = 0;
   const scheduledFrames = new Map();
@@ -346,6 +346,7 @@ function loadFigureRuntime({ reducedMotion = false } = {}) {
       addEventListener(type, handler) { listeners[type] = handler; },
       removeEventListener(type) { delete listeners[type]; },
       click() { if (listeners.click) listeners.click({ target: this }); },
+      dispatchEvent(event) { if (listeners[event.type]) listeners[event.type]({ ...event, target: this }); },
       querySelector() { return null; },
       querySelectorAll() { return []; },
     };
@@ -396,7 +397,7 @@ function loadFigureRuntime({ reducedMotion = false } = {}) {
     removeEventListener(type) { delete windowListeners[type]; },
   };
   const context = {
-    console,
+    console: runtimeConsole,
     document,
     performance: { now() { return 0; } },
     window,
@@ -1779,7 +1780,7 @@ test('lesson reader keeps learning-path context and renders a copyable full-dept
   assert.match(lessonHtml, /fetch\(quizUrl, fetchOptions\)/);
   assert.doesNotMatch(lessonHtml, /<script src="figures(?:\.js|-(?!manifest))/);
   assert.match(lessonHtml, /<script src="figure-manifest\.js/);
-  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261013b/);
+  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261013d/);
   assert.match(lessonHtml, /<script src="progress\.js\?v=20260831a/);
   assert.match(fs.readFileSync(path.join(__dirname, 'lesson-figures.js'), 'utf8'), /providerBaseUrl \+ provider/);
   assert.match(lessonHtml, /import\('https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11/);
@@ -2077,6 +2078,196 @@ test('figure manifest deterministically routes only providers needed by lesson f
   assert.match(manifestSource, /window\.AIFS_FIGURE_PROVIDER_VERSIONS =/);
   assert.match(lessonHtml, new RegExp(`lesson-figures\\.js\\?v=${runtimeVersion}`));
   assert.match(lessonHtml, new RegExp(`figure-manifest\\.js\\?v=${manifestVersion}`));
+});
+
+function loadContextCacheConsumer({ failOnce = false } = {}) {
+  const warnings = [];
+  const runtimeConsole = { warn(...args) { warnings.push(args.map(String).join(' ')); } };
+  const runtime = loadFigureRuntime({ reducedMotion: true, runtimeConsole });
+  const requests = [];
+  const context = {
+    window: runtime.window, document: runtime.window.document,
+    console: runtimeConsole,
+  };
+  const manifest = buildFigureProviderManifest(path.resolve(__dirname, '..'), __dirname);
+  vm.runInNewContext(serializeFigureProviderManifest(manifest), context);
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'figures-manifest.js'), 'utf8'), context);
+  const append = context.document.head.appendChild.bind(context.document.head);
+  context.document.head.appendChild = script => {
+    append(script);
+    if (script.tagName !== 'script') return script;
+    const provider = script.src.split('/').at(-1).split('?')[0];
+    requests.push(provider);
+    queueMicrotask(() => {
+      if (failOnce && provider === 'figures-llmeng.js') {
+        failOnce = false;
+        script.onerror();
+        return;
+      }
+      try {
+        vm.runInNewContext(fs.readFileSync(path.join(__dirname, provider), 'utf8'), context, { filename: provider });
+        script.onload();
+      } catch (error) { script.onerror(); throw error; }
+    });
+    return script;
+  };
+  const host = runtime.element('div');
+  host.dataset.figure = '04-context-cache';
+  const root = runtime.element('article');
+  root.appendChild(host);
+  root.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [host] : [];
+  return { ...runtime, host, root, requests, warnings };
+}
+
+function cacheNodes(root, predicate) {
+  const nodes = [];
+  function visit(node) {
+    if (predicate(node)) nodes.push(node);
+    for (const child of node.children || []) visit(child);
+  }
+  visit(root);
+  return nodes;
+}
+
+test('04 context cache consumer lazily loads real prefix and semantic renderers', async t => {
+  const runtime = loadContextCacheConsumer();
+  await Promise.all([
+    runtime.window.AIFS_mountLessonFigures(runtime.root),
+    runtime.window.AIFS_mountLessonFigures(runtime.root),
+  ]);
+  t.diagnostic(JSON.stringify({ fence: '04-context-cache', requests: runtime.requests, prefix: typeof runtime.window.LESSON_FIGURES['prompt-cache-hit'], semantic: typeof runtime.window.LESSON_FIGURES['semantic-cache'], inputCount: cacheNodes(runtime.host, node => node.tagName === 'input').length }));
+  assert.equal(typeof runtime.window.LESSON_FIGURES['prompt-cache-hit'], 'function');
+  assert.equal(typeof runtime.window.LESSON_FIGURES['semantic-cache'], 'function');
+  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', 'figures-i18n-zh.js']);
+  assert.equal(runtime.host.dataset.lfMounted, '1');
+  assert.equal(cacheNodes(runtime.host, node => node.className === 'cf-shell').length, 1);
+  let ranges = cacheNodes(runtime.host, node => node.tagName === 'input');
+  assert.equal(ranges.length, 2, 'prefix controls must not be an empty stage');
+  const output = () => cacheNodes(runtime.host, node => node.className === 'lf-num')[0].innerHTML;
+  assert.match(output(), /^56\.0 /);
+  ranges[0].value = '50';
+  ranges[0].dispatchEvent({ type: 'input' });
+  assert.match(output(), /^40\.0 /);
+  let mode = cacheNodes(runtime.host, node => node.tagName === 'select')[0];
+  mode.value = 'semantic';
+  mode.dispatchEvent({ type: 'change' });
+  ranges = cacheNodes(runtime.host, node => node.tagName === 'input');
+  assert.equal(ranges.length, 1);
+  assert.match(output(), /^4 /);
+  assert.match(cacheNodes(runtime.host, node => node.className === 'lf-meta')[0].textContent, /0 of those hits/);
+  ranges[0].value = '0.70';
+  ranges[0].dispatchEvent({ type: 'input' });
+  assert.match(output(), /^8 /);
+  assert.match(cacheNodes(runtime.host, node => node.className === 'lf-meta')[0].textContent, /3 of those hits/);
+  mode.value = 'prefix';
+  mode.dispatchEvent({ type: 'change' });
+  assert.match(output(), /^56\.0 /, 'switching back retains the original renderer defaults');
+  runtime.window.AIFSFigureRuntime.disposeRoot(runtime.root);
+  const remountHost = runtime.element('div');
+  remountHost.dataset.figure = '04-context-cache';
+  const remountRoot = runtime.element('article');
+  remountRoot.appendChild(remountHost);
+  remountRoot.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [remountHost] : [];
+  await runtime.window.AIFS_mountLessonFigures(remountRoot);
+  assert.equal(cacheNodes(remountHost, node => node.className === 'cf-shell').length, 1);
+  assert.equal(runtime.requests.length, 3, 'remount must reuse provider loads');
+  assert.deepEqual(runtime.warnings, []);
+  t.diagnostic('prefix saved: 56.0% -> 40.0% (prefix 70 -> 50, hit 80); semantic: 4/10 hits, 0 wrong -> 8/10 hits, 3 wrong (threshold .85 -> .70); prefix reset: 56.0%');
+});
+
+test('04 context cache missing dependency fails loudly and retries without an empty mounted stage', async () => {
+  const runtime = loadContextCacheConsumer({ failOnce: true });
+  const sibling = runtime.element('div');
+  sibling.dataset.figure = 'softmax-temperature';
+  runtime.root.appendChild(sibling);
+  runtime.root.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [runtime.host, sibling] : [];
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  assert.equal(runtime.host.dataset.lfMounted, undefined);
+  assert.equal(runtime.host.children.length, 0);
+  assert.ok(runtime.warnings.some(message => message.includes('prompt-cache-hit')), 'missing renderer must name its dependency');
+  assert.equal(sibling.dataset.lfMounted, '1', 'a failed host must not block the next real figure');
+  assert.ok(cacheNodes(sibling, node => node.tagName === 'input').length > 0);
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  assert.equal(runtime.host.dataset.lfMounted, '1');
+  assert.equal(cacheNodes(runtime.host, node => node.tagName === 'input').length, 2);
+  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', 'figures-i18n-zh.js', 'figures-llmeng.js']);
+});
+
+test('04 context cache manifest guard delegates unchanged and rewraps provider registrations once', async () => {
+  const runtime = loadContextCacheConsumer();
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  const firstGuard = runtime.window.LESSON_FIGURES['04-context-cache'];
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  assert.equal(runtime.window.LESSON_FIGURES['04-context-cache'], firstGuard, 'repeat mounts must not stack guards');
+
+  // Boundary-only spy: the separate consumer test executes the real providers.
+  const calls = [];
+  let disposed = 0;
+  const disposer = () => { disposed++; };
+  function replacement() {
+    calls.push({ receiver: this, args: [...arguments] });
+    return disposer;
+  }
+  runtime.window.LF.register({ '04-context-cache': replacement });
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  const guard = runtime.window.LESSON_FIGURES['04-context-cache'];
+  assert.notEqual(guard, replacement, 'a newly registered provider must be validated');
+  const receiver = {};
+  const host = runtime.element('div');
+  const cfg = { mode: 'semantic', threshold: 0.85 };
+  const extra = {};
+  assert.equal(guard.call(receiver, host, cfg, extra), disposer);
+  assert.equal(calls[0].receiver, receiver);
+  assert.deepEqual(calls[0].args, [host, cfg, extra]);
+  await runtime.window.AIFS_mountLessonFigures(runtime.root);
+  assert.equal(runtime.window.LESSON_FIGURES['04-context-cache'], guard);
+
+  delete runtime.window.LESSON_FIGURES['semantic-cache'];
+  assert.throws(() => guard(host, cfg), /04-context-cache -> semantic-cache/);
+  assert.equal(calls.length, 1, 'missing dependency must not invoke the renderer');
+  const retryHost = runtime.element('div');
+  retryHost.dataset.figure = '04-context-cache';
+  const retryRoot = runtime.element('article');
+  retryRoot.appendChild(retryHost);
+  retryRoot.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [retryHost] : [];
+  await runtime.window.AIFS_mountLessonFigures(retryRoot);
+  assert.equal(retryHost.dataset.lfMounted, undefined);
+  assert.equal(retryHost.children.length, 0);
+  assert.equal(calls.length, 1);
+  assert.equal(disposed, 0);
+
+  // Re-register the real dependency and retry the same host without new scripts.
+  const registrations = {};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'figures-llmeng.js'), 'utf8'), {
+    window: { LF: { ...runtime.window.LF, register(entries) { Object.assign(registrations, entries); } } },
+  });
+  runtime.window.LF.register({ 'semantic-cache': registrations['semantic-cache'] });
+  await runtime.window.AIFS_mountLessonFigures(retryRoot);
+  assert.equal(retryHost.dataset.lfMounted, '1');
+  assert.equal(calls.length, 2);
+  runtime.window.AIFSFigureRuntime.disposeRoot(retryRoot);
+  assert.equal(disposed, 1, 'delegated disposer must remain owned by the shared runtime');
+  assert.equal(runtime.requests.length, 3);
+});
+
+test('04 context cache manifest requires real dependency registrations even with only its fence', t => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'aiefs-context-cache-'));
+  t.after(() => fs.rmSync(repoRoot, { recursive: true, force: true }));
+  const docs = path.join(repoRoot, 'certifications/claude/lessons/04-context-knowledge-memory-and-caching/docs');
+  const siteDir = path.join(repoRoot, 'site');
+  fs.mkdirSync(docs, { recursive: true });
+  fs.mkdirSync(siteDir);
+  fs.writeFileSync(path.join(docs, 'zh.md'), '```figure\n04-context-cache\n```');
+  fs.writeFileSync(path.join(siteDir, 'lesson-figures.js'), '');
+  for (const provider of ['figures-llmeng.js', 'figures-claude-certifications.js']) {
+    fs.copyFileSync(path.join(__dirname, provider), path.join(siteDir, provider));
+  }
+  const order = ['figures-llmeng.js', 'figures-claude-certifications.js'];
+  const manifest = buildFigureProviderManifest(repoRoot, siteDir, order);
+  assert.deepEqual(manifest.providersByFigure, { '04-context-cache': order });
+  assert.deepEqual(manifest.figureDependencies, { '04-context-cache': ['prompt-cache-hit', 'semantic-cache'] });
+  assert.throws(() => buildFigureProviderManifest(repoRoot, siteDir, ['figures-claude-certifications.js']),
+    /04-context-cache -> prompt-cache-hit.*04-context-cache -> semantic-cache/);
 });
 
 test('new figure provider modules are appended deterministically without disturbing legacy order', t => {

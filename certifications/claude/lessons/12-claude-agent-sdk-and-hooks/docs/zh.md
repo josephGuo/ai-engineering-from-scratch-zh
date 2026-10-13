@@ -32,21 +32,21 @@ Agent SDK 提供运行框架。哪些来源可信、哪些命令允许执行、�
 
 ```mermaid
 flowchart TB
-    Goal[User goal] --> Harness[Agent harness]
-    Harness --> Prompt[Trusted instructions]
+    Goal[用户目标] --> Harness[agent 运行框架]
+    Harness --> Prompt[可信指令]
     Harness --> Model[Claude]
-    Harness --> Tools[Tools and MCP]
-    Harness --> Context[Files, memory, and session state]
-    Harness --> Hooks[Deterministic lifecycle hooks]
-    Harness --> Policy[Permissions and sandbox]
-    Harness --> Agents[Subagents]
-    Harness --> Trace[Events and observability]
-    Model --> Decision[Proposed next action]
+    Harness --> Tools[tool 与 MCP]
+    Harness --> Context[文件、记忆与会话状态]
+    Harness --> Hooks[确定性的生命周期钩子]
+    Harness --> Policy[权限与沙箱]
+    Harness --> Agents[subagent]
+    Harness --> Trace[事件与可观测性]
+    Model --> Decision[拟议的下一步动作]
     Decision --> Policy
     Policy --> Tools
     Tools --> Context
     Context --> Model
-    Trace --> Eval[Evaluation]
+    Trace --> Eval[评估]
 ```
 
 Agent SDK 把 Claude Code 使用的循环封装成面向应用的接口。依据当前 SDK 与语言，它可能提供内置 tool、流式事件、权限、hook、会话、MCP 连接、subagent、Skill 和配置。
@@ -116,16 +116,16 @@ stateDiagram-v2
     CaptureFreshScreenshot --> AskModel
     AskModel --> ValidateAction: tool_use
     AskModel --> VerifyGoal: end_turn
-    ValidateAction --> DenyOrEscalate: stale image, invalid action, or policy denial
-    ValidateAction --> AwaitHuman: consequential or consent-bearing action
-    AwaitHuman --> ExecuteInSandbox: approved
-    AwaitHuman --> DenyOrEscalate: denied
-    ValidateAction --> ExecuteInSandbox: allowed low-risk action
+    ValidateAction --> DenyOrEscalate: 图像过期、动作无效或策略拒绝
+    ValidateAction --> AwaitHuman: 有重要后果或需要同意的操作
+    AwaitHuman --> ExecuteInSandbox: 已批准
+    AwaitHuman --> DenyOrEscalate: 已拒绝
+    ValidateAction --> ExecuteInSandbox: 已允许的低风险操作
     ExecuteInSandbox --> CaptureFreshScreenshot
     CaptureFreshScreenshot --> VerifyLastAction
-    VerifyLastAction --> AskModel: result confirmed
-    VerifyLastAction --> DenyOrEscalate: ambiguous or wrong state
-    VerifyGoal --> [*]: independent final-state check passes
+    VerifyLastAction --> AskModel: 结果已确认
+    VerifyLastAction --> DenyOrEscalate: 状态不明确或错误
+    VerifyGoal --> [*]: 独立终态检查通过
 ```
 
 执行前，根据可信的运行框架状态校验每个动作：
@@ -162,18 +162,18 @@ hook 常见用途包括：
 ```mermaid
 sequenceDiagram
     participant M as Claude
-    participant H as Harness
-    participant K as Pre-tool hook
-    participant T as Tool
-    participant P as Post-tool hook
-    M->>H: Proposed tool call
-    H->>K: Tool name, input, session metadata
-    K-->>H: Allow, deny, or constrained decision
-    H->>T: Execute allowed call
-    T-->>H: Raw result
-    H->>P: Result and execution metadata
-    P-->>H: Redacted result plus audit record
-    H-->>M: Safe tool result
+    participant H as 运行框架
+    participant K as tool 前钩子
+    participant T as tool
+    participant P as tool 后钩子
+    M->>H: 拟议的 tool 调用
+    H->>K: tool 名称、输入与会话 metadata
+    K-->>H: 允许、拒绝或受约束的决策
+    H->>T: 执行已允许的调用
+    T-->>H: 原始结果
+    H->>P: 结果与执行 metadata
+    P-->>H: 脱敏结果与审计记录
+    H-->>M: 安全的 tool 结果
 ```
 
 hook 运行在模型推理之外，因此适合做 invariant 检查。但这并不意味着检查必然正确：薄弱的 denylist 可以绕过；hook 可能泄露 secret；post-hook 发生在原始副作用之后，无法阻止它。

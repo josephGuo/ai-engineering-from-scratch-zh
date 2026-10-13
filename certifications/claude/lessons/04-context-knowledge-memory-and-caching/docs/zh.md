@@ -132,13 +132,13 @@ dynamic suffix: user request + fresh retrieval + current state
 
 ```mermaid
 flowchart LR
-    A["Source created"] --> B["Classified and approved"]
-    B --> C["Indexed or uploaded"]
-    C --> D["Retrieved for a task"]
-    D --> E["Claims validated"]
-    E --> F["Reviewed on schedule"]
-    F -->|"still valid"| C
-    F -->|"superseded"| G["Archived and removed from active retrieval"]
+    A["创建来源"] --> B["分类并审批"]
+    B --> C["建立索引或上传"]
+    C --> D["为任务检索"]
+    D --> E["核验主张"]
+    E --> F["按计划复核"]
+    F -->|"仍然有效"| C
+    F -->|"已被取代"| G["归档并移出当前检索范围"]
 ```
 
 难点在批准、刷新和退役。

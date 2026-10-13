@@ -54,7 +54,10 @@ class Element {
     return child;
   }
   set innerHTML(value) {
-    this.textContent = String(value).replace(/<[^>]*>/g, '');
+    const parts = String(value).match(/^(.*?)<small>(.*?)<\/small>$/);
+    if (!parts) { this.textContent = String(value).replace(/<[^>]*>/g, ''); return; }
+    this.textContent = parts[1];
+    this.append(new Element('small', {}, [parts[2]]));
   }
 
   get firstChild() { return this.childNodes[0] || null; }
@@ -96,7 +99,10 @@ function hasClass(node, cls) {
 
 function matches(node, selector) {
   if (selector === '*') return true;
-  if (selector === '.lf-meta' || selector === '.lf-formula') return hasClass(node, selector.slice(1));
+  if (selector === '.lf-ctrl') return hasClass(node, 'lf-ctrl');
+  if (selector === 'label') return node.tagName === 'LABEL';
+  if (selector === 'input,select') return ['INPUT', 'SELECT'].includes(node.tagName);
+  if (selector === '.lf-meta' || selector === '.lf-formula' || selector === '.lf-num') return hasClass(node, selector.slice(1));
   if (selector === '.lf-label') return hasClass(node, 'lf-label');
   if (selector === '.lf-head') return hasClass(node, 'lf-head');
   if (selector === '.lf-cap') return hasClass(node, 'lf-cap');
@@ -134,8 +140,8 @@ function registeredFigures(filename) {
 }
 
 function loadProvider(filename) {
-  const source = fs.readFileSync(path.join(site, filename), 'utf8');
-  let registered = null;
+  const files = Array.isArray(filename) ? filename : [filename];
+  const registered = {};
   const documentHead = new Element('head');
   const providerDocument = {
     head: documentHead,
@@ -169,18 +175,19 @@ function loadProvider(filename) {
     },
     addMotionController() {},
     registerDisposer() {},
-    register(figures) { registered = figures; }
+    register(figures) { Object.assign(registered, figures); }
   };
-  vm.runInNewContext(source, {
+  const context = {
     window: {
-      LF,
+      LF, LESSON_FIGURES: registered,
       matchMedia() { return { matches: true }; },
       setTimeout() { return 1; },
       clearTimeout() {}
     },
     document: providerDocument
-  }, { filename: path.join(site, filename) });
-  return registered || {};
+  };
+  for (const file of files) vm.runInNewContext(fs.readFileSync(path.join(site, file), 'utf8'), context, { filename: path.join(site, file) });
+  return registered;
 }
 
 function visibleText(root) {
@@ -486,3 +493,88 @@ function main() {
 
 main();
 testVisualFindingReaderText();
+
+function testNestedContextCache() {
+  const render = loadProvider(['figures-llmeng.js', 'figures-claude-certifications.js'])['04-context-cache'];
+  const widget = host('04-context-cache', []);
+  render(widget);
+  const window = {};
+  vm.runInNewContext(fs.readFileSync(path.join(site, 'figures-i18n-zh.js'), 'utf8'), { window, document: new Document([widget]) });
+  function tree(node) {
+    const attrs = Object.assign({}, node.attrs); delete attrs['aria-label'];
+    const style = Object.assign({}, node.style); if (node.tagName === 'SVG') delete style.minWidth;
+    return { tag: node.tagName, attrs, style, value: node.value, children: node.children.flatMap(child => {
+      if (hasClass(child, 'lf-readability-hint')) return [];
+      if (hasClass(child, 'lf-readable-viewport')) return child.children.map(tree);
+      return [tree(child)];
+    }) };
+  }
+  function apply(event) {
+    const before = tree(widget);
+    const numbers = visibleText(widget).join(' ').match(/\d+(?:[.,]\d+)*/g);
+    const svg = widget.querySelector('svg');
+    const nodes = svg.querySelectorAll('*');
+    if (event) widget.emit(event); else window.applyFigureI18n(new Document([widget]));
+    assert.deepEqual(tree(widget), before, 'nested cache: attribute/geometry/animation/control tree unchanged');
+    assert.deepEqual(visibleText(widget).join(' ').match(/\d+(?:[.,]\d+)*/g), numbers, 'nested cache: all numbers unchanged');
+    assert.equal(widget.querySelector('svg'), svg, 'complete SVG retained');
+    assert.deepEqual(svg.querySelectorAll('*'), nodes, 'all SVG child identities retained');
+    assert.match(widget.querySelector('.lf-cap').textContent, /^(重复出现的长系统|语义缓存会)/);
+    assert.equal(widget.querySelector('.lf-head').textContent, svg.attrs.viewBox === '0 0 520 120' ? 'Prompt 缓存命中拖动前缀占比与命中率' : '语义缓存拖动阈值');
+    const expectedAria = svg.attrs.viewBox === '0 0 520 120'
+      ? ['缓存机制', '共享前缀（占 prompt %）', '缓存命中率（%）']
+      : ['缓存机制', '相似度阈值'];
+    assert.deepEqual(widget.querySelectorAll('input,select').map(node => node.getAttribute('aria-label')), expectedAria);
+    const formula = widget.querySelector('.lf-formula').textContent;
+    if (svg.attrs.viewBox === '0 0 520 120') {
+      assert.equal(svg.querySelectorAll('text').length, 2);
+      assert.equal(svg.style.minWidth, '624px', '520-unit diagram with explicit 10-unit text scales to 12px');
+      assert.equal(widget.querySelectorAll('.lf-readable-viewport').length, 1);
+      assert.match(formula, /^saved = hit_rate × prefix_fraction = /);
+      assert.match(widget.querySelector('.lf-meta').textContent, /^命中率/);
+      assert.match(widget.querySelector('.lf-num').textContent, /% 预填充计算节省量$/);
+    } else {
+      assert.equal(svg.querySelectorAll('text').length, 0, 'semantic SVG has no text; null minPx is not small text');
+      assert.equal(widget.querySelectorAll('.lf-readable-viewport').length, 0);
+      assert.match(formula, /^当 cos\(query, cached\) ≥ /);
+      assert.match(widget.querySelector('.lf-meta').textContent, /^阈值/);
+      assert.match(widget.querySelector('.lf-num').textContent, /^\d+ 条由缓存返回（共 10 条）$/);
+    }
+  }
+  apply();
+  assert.equal(widget.querySelector('.lf-num').textContent, '56.0 % 预填充计算节省量');
+  assert.equal(widget.querySelector('.lf-formula').textContent, 'saved = hit_rate × prefix_fraction = 0.80 × 0.70 = 0.56');
+  const mode = widget.querySelectorAll('input,select').find(node => node.tagName === 'SELECT');
+  assert.deepEqual(mode.children.map(node => node.attrs.value), ['prefix', 'semantic']);
+  for (const value of ['prefix', 'semantic', 'prefix']) {
+    mode.value = value; mode.emit('change'); apply('change');
+    if (value === 'semantic') {
+      assert.equal(widget.querySelector('.lf-num').textContent, '4 条由缓存返回（共 10 条）');
+      assert.equal(widget.querySelector('.lf-meta').textContent, '阈值 0.85  ·  命中中有 0 条返回错误答案  ·  均衡');
+    } else {
+      assert.equal(widget.querySelector('.lf-num').textContent, '56.0 % 预填充计算节省量');
+    }
+    const inputs = widget.querySelectorAll('input,select').filter(node => node.tagName === 'INPUT');
+    for (const input of inputs) {
+      for (const value of (inputs.length === 1 ? [0.5, 0.7, 0.85, 0.99] : [0, 50, 100])) {
+        input.value = value; input.emit('input'); apply('input');
+        assert.equal(input.value, value, 'overlay must retain input values');
+        if (inputs.length === 1 && value === 0.7) {
+          assert.equal(widget.querySelector('.lf-num').textContent, '8 条由缓存返回（共 10 条）');
+          assert.equal(widget.querySelector('.lf-meta').textContent, '阈值 0.70  ·  命中中有 3 条返回错误答案  ·  低阈值：命中多，风险高');
+        }
+      }
+    }
+  }
+  widget.append(new Element('pre', {}, [one('code', '', 'SEMANTIC CACHE')]));
+  widget.append(one('span', '', 'Unknown cache explanation'));
+  widget.append(one('div', 'lf-cap', 'Unknown cache caption'));
+  widget.append(one('input', '', '', { 'aria-label': 'Unknown cache control' }));
+  widget.emit('click');
+  assert.equal(widget.children.at(-1).getAttribute('aria-label'), 'Unknown cache control');
+  assert.ok(visibleText(widget).includes('Unknown cache explanation'));
+  assert.ok(visibleText(widget).includes('Unknown cache caption'));
+  assert.ok(visibleText(widget).includes('SEMANTIC CACHE'), 'cache code subtrees are not translated');
+  console.log('nested context-cache: real prefix → semantic → prefix consumer, dynamic inputs, exact captions/headers/aria, number and attribute tree invariance passed');
+}
+testNestedContextCache();

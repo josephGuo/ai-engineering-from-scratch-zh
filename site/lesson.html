@@ -2691,7 +2691,7 @@
     <aside class="toc-sidebar" id="tocSidebar" aria-hidden="true"></aside>
   </div>
 
-  <script src="md-render.js?v=20261013a"></script>
+  <script src="md-render.js?v=20261013e"></script>
   <script src="build-meta.js"></script>
   <script src="data.js?v=20260831a"></script>
   <script>
@@ -2839,8 +2839,8 @@
   <script src="header.js?v=20261012b" defer></script>
   <script src="cmdpalette.js?v=20261012b" defer></script>
   <script src="lesson-figures.js?v=b88d7b13ddfa"></script>
-  <script src="figure-manifest.js?v=3623c333051d"></script>
-  <script src="figures-manifest.js?v=20261013b"></script>
+  <script src="figure-manifest.js?v=766dfefe6b05"></script>
+  <script src="figures-manifest.js?v=20261013d"></script>
   <script>
     (function () {
       // 渲染器（parseMd 等纯函数）已抽至 md-render.js，与 build.js 预渲染共用。
@@ -4524,9 +4524,11 @@
         if (svg && svg.viewBox.baseVal.width > 0) {
           svg.style.width = svg.viewBox.baseVal.width + 'px';
           svg.style.maxWidth = 'none';
-          root.setAttribute('tabindex', '0');
-          root.setAttribute('role', 'region');
-          root.setAttribute('aria-label', '图表，可横向滚动；聚焦后用方向键浏览');
+          // 弹窗内容按自然宽度展开，键盘焦点应落在真正拥有滚动条的外层。
+          var viewport = root.id === 'mermaidModalCenter' && root.parentElement ? root.parentElement : root;
+          viewport.setAttribute('tabindex', '0');
+          viewport.setAttribute('role', 'region');
+          viewport.setAttribute('aria-label', '图表，可横向滚动；聚焦后用方向键浏览');
         }
         // 非节点的 foreignObject（cluster 标题 / edge label 连线标签 / note）overflow 兜底：
         // 中文测量偏窄导致框算小时，让超出文字显示而非被裁。节点不动（字体修复已够，且加宽会破坏布局）。

@@ -44,15 +44,15 @@ JSON 解析器成功了。对象拥有全部预期键。应用把它路由为最
 
 ```mermaid
 flowchart LR
-    Raw[Raw model output] --> Parse[Strict JSON parse]
-    Parse --> Schema[Schema validation]
-    Schema --> Meaning[Semantic checks]
-    Meaning --> Policy[Authorization and policy]
-    Policy --> Consume[Typed application object]
-    Parse --> Repair[Bounded repair]
+    Raw[模型原始输出] --> Parse[严格 JSON 解析]
+    Parse --> Schema[Schema 校验]
+    Schema --> Meaning[语义检查]
+    Meaning --> Policy[授权与策略]
+    Policy --> Consume[类型化应用对象]
+    Parse --> Repair[有界修复]
     Schema --> Repair
-    Meaning --> Escalate[Human review or safe fallback]
-    Policy --> Deny[Deterministic denial]
+    Meaning --> Escalate[人工审核或安全备用方案]
+    Policy --> Deny[确定性拒绝]
     Repair --> Raw
 ```
 

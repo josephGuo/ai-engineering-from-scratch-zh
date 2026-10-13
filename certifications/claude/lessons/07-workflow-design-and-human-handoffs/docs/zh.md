@@ -115,14 +115,14 @@ Claude 工作流通常使用少数几种模式：
 
 ```mermaid
 flowchart LR
-    A["Intake and source freeze"] --> B{"Complete and approved?"}
-    B -->|"no"| C["Human resolves or uses fallback"]
-    B -->|"yes"| D["Claude extracts and drafts"]
-    D --> E["Automated checks"]
-    E --> F["Reviewer handoff"]
-    F -->|"approve"| G["Publish"]
-    F -->|"revise"| D
-    F -->|"reject"| H["Close and record failure"]
+    A["接收需求并冻结来源"] --> B{"完整且已获批准？"}
+    B -->|"否"| C["由人工解决或使用备用方案"]
+    B -->|"是"| D["Claude 提取信息并起草"]
+    D --> E["自动检查"]
+    E --> F["交给审核者"]
+    F -->|"批准"| G["发布"]
+    F -->|"修订"| D
+    F -->|"拒绝"| H["关闭并记录失败"]
 ```
 
 ### 交接本身就是产品

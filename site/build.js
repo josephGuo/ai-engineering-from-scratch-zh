@@ -575,6 +575,11 @@ function discoverFigureProviderOrder(siteDir = __dirname, baseOrder = FIGURE_PRO
   return baseOrder.concat(additions);
 }
 
+// Dynamic renderer names inside the certification wrapper are not figure fences.
+const FIGURE_DEPENDENCIES = {
+  '04-context-cache': ['prompt-cache-hit', 'semantic-cache'],
+};
+
 function buildFigureProviderManifest(
   repoRoot = REPO_ROOT,
   siteDir = __dirname,
@@ -595,19 +600,29 @@ function buildFigureProviderManifest(
   const localSource = fs.readFileSync(path.join(siteDir, 'lesson-figures.js'), 'utf8');
   const providersByFigure = {};
   const unresolved = [];
+  const figureDependencies = {};
   for (const id of discoverUsedFigureIds(repoRoot)) {
     const quotedId = new RegExp(`['"]${escapeRegExp(id)}['"]`);
     // lesson-figures.js 自带的本地 widget 不需要再加载 provider；即使同名
     // 字符串也出现在 figures.js，仍由共享 runtime 直接挂载。
     if (quotedId.test(localSource)) continue;
     const providers = resolvedProviderOrder.filter(provider => quotedId.test(providerSources.get(provider)));
-    if (providers.length) providersByFigure[id] = providers;
+    const dependencies = FIGURE_DEPENDENCIES[id] || [];
+    if (dependencies.length) figureDependencies[id] = dependencies.slice();
+    for (const dependency of dependencies) {
+      // Match registration keys, not references in the consuming wrapper.
+      const registration = new RegExp(`^\\s*['"]${escapeRegExp(dependency)}['"]\\s*:`, 'm');
+      const dependencyProviders = resolvedProviderOrder.filter(provider => registration.test(providerSources.get(provider)));
+      if (!dependencyProviders.length) unresolved.push(`${id} -> ${dependency}`);
+      providers.push(...dependencyProviders);
+    }
+    if (providers.length) providersByFigure[id] = resolvedProviderOrder.filter(provider => providers.includes(provider));
     else unresolved.push(id);
   }
   if (unresolved.length) {
     throw new Error(`Figure IDs have no provider: ${unresolved.join(', ')}`);
   }
-  return { providerOrder: resolvedProviderOrder, providerVersions, providersByFigure };
+  return { providerOrder: resolvedProviderOrder, providerVersions, providersByFigure, figureDependencies };
 }
 
 function syncFigureAssetVersions(siteDir, manifestSource) {
@@ -633,7 +648,8 @@ function serializeFigureProviderManifest(manifest) {
     '// Provider order is significant: later registrations override earlier ones.\n' +
     `window.AIFS_FIGURE_PROVIDER_ORDER = ${JSON.stringify(manifest.providerOrder, null, 2)};\n` +
     `window.AIFS_FIGURE_PROVIDER_VERSIONS = ${JSON.stringify(manifest.providerVersions, null, 2)};\n` +
-    `window.AIFS_FIGURE_PROVIDERS = ${JSON.stringify(manifest.providersByFigure, null, 2)};\n`;
+    `window.AIFS_FIGURE_PROVIDERS = ${JSON.stringify(manifest.providersByFigure, null, 2)};\n` +
+    `window.AIFS_FIGURE_DEPENDENCIES = ${JSON.stringify(manifest.figureDependencies, null, 2)};\n`;
 }
 
 function writeFigureManifest(repoRoot = REPO_ROOT, siteDir = __dirname) {

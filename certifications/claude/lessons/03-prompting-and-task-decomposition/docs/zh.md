@@ -90,12 +90,12 @@ Every recommendation must cite at least two ticket IDs and one policy section.
 
 ```mermaid
 flowchart LR
-    A["Clarify the decision"] --> B["Inventory and classify sources"]
-    B --> C["Extract claims and evidence"]
-    C --> D["Analyze patterns"]
-    D --> E["Draft for the audience"]
-    E --> F["Validate claims and constraints"]
-    F --> G["Approve or revise"]
+    A["明确要做的决策"] --> B["盘点来源并分类"]
+    B --> C["提取主张与证据"]
+    C --> D["分析规律"]
+    D --> E["面向目标读者起草"]
+    E --> F["核验主张与约束"]
+    F --> G["批准或修订"]
 ```
 
 这与按任意页数切分不同。每条边界都应回答一个问题：

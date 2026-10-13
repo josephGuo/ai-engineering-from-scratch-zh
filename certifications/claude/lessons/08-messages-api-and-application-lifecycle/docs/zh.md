@@ -61,8 +61,8 @@ stateDiagram-v2
     PersistAssistantBlocks --> RecoverOrFail: max_tokens or refusal or other stop
     ExecuteTools --> PersistToolResults
     PersistToolResults --> BuildRequest
-    RecoverOrFail --> BuildRequest: bounded retry is safe
-    RecoverOrFail --> [*]: fail or escalate
+    RecoverOrFail --> BuildRequest: 有界重试是安全的
+    RecoverOrFail --> [*]: 失败或升级处理
     Finish --> [*]
 ```
 
@@ -314,15 +314,15 @@ python3 -m unittest discover tests -v
 
 ```mermaid
 flowchart LR
-    Intake[Validate intake] --> Authorize[Authorize capabilities]
-    Authorize --> Invoke[Invoke model]
-    Invoke --> Parse[Parse typed blocks]
-    Parse --> Act[Execute approved tools]
-    Act --> Verify[Verify result and final state]
-    Verify --> Deliver[Deliver or escalate]
-    Deliver --> Observe[Record trace and metrics]
-    Observe --> Evaluate[Run regression evals]
-    Evaluate --> Improve[Version prompt, model, tools, or code]
+    Intake[验证输入] --> Authorize[授权能力]
+    Authorize --> Invoke[调用模型]
+    Invoke --> Parse[解析类型化内容块]
+    Parse --> Act[执行已批准的工具]
+    Act --> Verify[验证结果与最终状态]
+    Verify --> Deliver[交付或升级处理]
+    Deliver --> Observe[记录 trace 与指标]
+    Observe --> Evaluate[运行回归评测]
+    Evaluate --> Improve[对 prompt、模型、工具或代码进行版本管理]
     Improve --> Intake
 ```
 

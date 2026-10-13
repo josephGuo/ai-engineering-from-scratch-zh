@@ -452,7 +452,8 @@
         code = code.replace(keywords, '<span class="syn-keyword">$1</span>');
         code = code.replace(/\b(\d+\.?\d*)\b/g, '<span class="syn-number">$1</span>');
 
-        for (var ti = 0; ti < tokens.length; ti++) {
+        // 后存的字符串可能包含先存的注释 token；先恢复外层，再恢复内层。
+        for (var ti = tokens.length - 1; ti >= 0; ti--) {
           code = code.replace('\x00TOK' + ti + '\x00', tokens[ti]);
         }
         return code;

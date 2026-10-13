@@ -94,16 +94,16 @@ stateDiagram-v2
     AskModel --> InspectStopReason
     InspectStopReason --> ValidateFinal: end_turn
     InspectStopReason --> ValidateCalls: tool_use
-    InspectStopReason --> RecoverOrStop: other reason
+    InspectStopReason --> RecoverOrStop: 其他原因
     ValidateCalls --> AuthorizeCalls
-    AuthorizeCalls --> ExecuteCalls: allowed
-    AuthorizeCalls --> ReturnDenial: denied
+    AuthorizeCalls --> ExecuteCalls: 允许
+    AuthorizeCalls --> ReturnDenial: 拒绝
     ExecuteCalls --> ReturnResults
     ReturnDenial --> AppendResults
     ReturnResults --> AppendResults
     AppendResults --> CheckBudgets
-    CheckBudgets --> AskModel: budget remains
-    CheckBudgets --> Escalate: budget exhausted
+    CheckBudgets --> AskModel: 预算尚有余量
+    CheckBudgets --> Escalate: 预算已耗尽
     ValidateFinal --> [*]
     Escalate --> [*]
 ```
