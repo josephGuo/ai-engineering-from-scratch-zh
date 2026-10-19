@@ -461,11 +461,11 @@ function writeMarkdown(file, { name, description, version }) {
 
 test('shared site asset families use the expected cache keys on every page', () => {
   const release = '20260831a';
-  const appRelease = '20261012b';
-  const styleRelease = '20261012e';
-  const navigationRelease = '20261012b';
-  const narrationRelease = '20260831a';
-  const roadmapRelease = '20261012e';
+  const appRelease = '20261019a';
+  const styleRelease = '20261019d';
+  const navigationRelease = '20261019c';
+  const narrationRelease = '20261019a';
+  const roadmapRelease = '20261019a';
   const pages = [
     'about.html',
     'assessment.html',
@@ -493,8 +493,8 @@ test('shared site asset families use the expected cache keys on every page', () 
     }
     assert.equal(versionFor(source, 'progress.js'), release, `${page} has stale progress.js`);
     assert.equal(versionFor(source, 'header.js'), navigationRelease, `${page} has stale header.js`);
-    assert.equal(versionFor(source, 'cmdpalette.js'), '20261012b', `${page} has stale cmdpalette.js`);
-    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), '20261012b', `${page} has stale certifications.js`);
+    assert.equal(versionFor(source, 'cmdpalette.js'), '20261019a', `${page} has stale cmdpalette.js`);
+    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), '20261019a', `${page} has stale certifications.js`);
   }
 
   assert.equal(versionFor(sourceFor('index.html'), 'app.js'), appRelease);
@@ -1443,11 +1443,43 @@ test('repository exposes the four core AI engineering learning paths', () => {
       new RegExp(`class="learning-paths-node [^"]+"[^>]+href="learning-paths\\.html#${anchor}"[^>]+aria-label="查看\\s*${title}所需的能力"`)
     );
   }
-  assert.match(readme, /528 节课 · 20 个阶段/);
+  assert.match(readme, /542 节课 · 20 个阶段/);
   assert.match(readme, /https:\/\/aieng-zh\.cn\/learning-paths\.html/);
   assert.doesNotMatch(readme, /<!-- STATS:START|<\/b> readers/);
   assert.doesNotMatch(readme, /\[stats-start\]: #/);
   assert.doesNotMatch(readme, /## AI Engineering Learning Paths|site\/assets\/figures\/006-ai-engineering-learning-paths\.svg/);
+});
+
+test('reverse engineering is a focused route with all fourteen canonical lessons and its ownership gate', () => {
+  const root = path.resolve(__dirname, '..');
+  const roadmap = parseRoadmap(fs.readFileSync(path.join(root, 'ROADMAP.md'), 'utf8'));
+  const phases = parseReadme(fs.readFileSync(path.join(root, 'README.md'), 'utf8'), roadmap);
+  const learningPaths = parseLearningPaths(root, phases);
+  const route = learningPaths.find(entry => entry.id === 'reverse-engineering');
+  assert.ok(route, 'reverse-engineering manifest is missing');
+  assert.equal(route.title, '逆向工程');
+  assert.equal(route.stateFile, 'REVERSE-ENGINEERING-LEARNING.md');
+  assert.equal(route.lessons.length, 14);
+  assert.deepEqual(route.lessons.map(lesson => lesson.order), Array.from({ length: 14 }, (_, index) => index + 1));
+  assert.deepEqual(
+    route.lessons.map(lesson => Number(lesson.path.match(/^phases\/13-tools-and-protocols\/(\d+)-/)[1])),
+    Array.from({ length: 14 }, (_, index) => index + 32)
+  );
+  const canonicalLessons = new Map(phases.flatMap(phase => phase.lessons.map(lesson => [
+    lesson.url.split('/tree/main/')[1].replace(/\/$/, ''), lesson.name,
+  ])));
+  for (const lesson of route.lessons) {
+    assert.ok(canonicalLessons.has(lesson.path), `${lesson.path} is missing from the canonical catalog`);
+    assert.equal(lesson.title, canonicalLessons.get(lesson.path), `${lesson.path} title drifted`);
+    assert.ok(fs.existsSync(path.join(root, lesson.path, 'docs', 'zh.md')), `${lesson.path} has no Chinese source`);
+  }
+  const ownershipGate = route.prerequisites.find(entry => entry.id === 'own-binaries-only');
+  assert.ok(ownershipGate, 'the ownership and authorization prerequisite is missing');
+  assert.equal(ownershipGate.required, true);
+  assert.equal(ownershipGate.type, 'knowledge');
+  assert.match(ownershipGate.title, /自己构建|获授权/);
+  assert.deepEqual(route.lessons[0].prerequisiteChecks, ['own-binaries-only']);
+  assert.equal(route.quickStart.lessonPath, route.lessons[0].path);
 });
 
 test('homepage preserves live GitHub CTAs and the motion-aware learner marquee', () => {
@@ -1538,8 +1570,8 @@ test('shared header progressively compacts without hiding GitHub stars or search
   assert.match(headerSource, /var COMPACT_HEADER_QUERY = '\(max-width: 1400px\)'/);
   assert.match(headerSource, /var NARROW_HEADER_QUERY = '\(max-width: 820px\)'/);
   assert.match(headerSource, /priorityNav\.className = 'header-priority-nav'/);
-  assert.match(headerSource, /target !== 'index\.html' && target !== 'catalog\.html' && target !== 'learning-paths\.html'/);
-  assert.match(headerSource, /ensureNavigationLink\(nav, 'learning-paths\.html', '学习路径', ''\)/);
+  assert.match(headerSource, /link\.hasAttribute\('data-header-priority'\)/);
+  assert.doesNotMatch(headerSource, /ensureNavigationLink|addNavigationLinks/);
   assert.match(headerSource, /if \(isNarrow\) restorePriorityLinks\(\);[\s\S]*?else movePriorityLinksOut\(\)/);
 
   assert.match(
@@ -1560,9 +1592,9 @@ test('shared header progressively compacts without hiding GitHub stars or search
   assert.match(headerSource, /open && !header\.contains\(event\.target\)[\s\S]*?setOpen\(false, false\)/);
   assert.match(headerSource, /event\.key === 'Escape'[\s\S]*?setOpen\(false, true\)/);
 
-  assert.match(styles, /\.header-inner\s*\{[\s\S]*?width: 100%;[\s\S]*?max-width: 1360px;[\s\S]*?min-width: 0;/);
+  assert.match(styles, /\.header-inner\s*\{[\s\S]*?width: 100%;[\s\S]*?max-width: 1480px;[\s\S]*?min-width: 0;/);
   assert.match(styles, /\.header-nav,\s*\n\.header-priority-nav\s*\{[\s\S]*?white-space: nowrap;/);
-  assert.match(styles, /@media \(max-width: 1480px\) and \(min-width: 1401px\)/);
+  assert.match(styles, /@media \(max-width: 1560px\) and \(min-width: 1401px\)/);
   assert.match(styles, /@media \(max-width: 1400px\) \{[\s\S]*?\.header-priority-nav\s*\{[\s\S]*?\.header-inner > \.header-github[\s\S]*?\.header-inner > \.search-toggle[\s\S]*?\.header-nav\s*\{[\s\S]*?width: min\(360px, calc\(100vw - 32px\)\);[\s\S]*?overflow-y: auto;/);
   assert.match(styles, /@media \(max-width: 820px\) \{[\s\S]*?\.header-priority-nav\s*\{\s*display: none;[\s\S]*?\.header-inner > \.header-github[\s\S]*?\.header-inner > \.search-toggle/);
   assert.match(styles, /@media \(max-width: 480px\) \{[\s\S]*?\.header-inner > \.header-github svg\s*\{\s*display: none;[\s\S]*?\.header-inner > \.header-github::before/);
@@ -1780,7 +1812,7 @@ test('lesson reader keeps learning-path context and renders a copyable full-dept
   assert.match(lessonHtml, /fetch\(quizUrl, fetchOptions\)/);
   assert.doesNotMatch(lessonHtml, /<script src="figures(?:\.js|-(?!manifest))/);
   assert.match(lessonHtml, /<script src="figure-manifest\.js/);
-  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261013d/);
+  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261019a/);
   assert.match(lessonHtml, /<script src="progress\.js\?v=20260831a/);
   assert.match(fs.readFileSync(path.join(__dirname, 'lesson-figures.js'), 'utf8'), /providerBaseUrl \+ provider/);
   assert.match(lessonHtml, /import\('https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11/);
@@ -2541,4 +2573,41 @@ test('lesson page includes completion panel and button contract', () => {
   runtime.api.unmarkLessonComplete(lesson);
   assert.equal(runtime.api.isLessonComplete(lesson), false);
   assert.equal(runtime.api.getLessonProgress(lesson).completedAt, null);
+});
+
+test('all shared headers render one complete menu before JavaScript runs', () => {
+  const expected = [
+    ['index.html#contents', '课程目录'], ['catalog.html', '课程表'], ['prereqs.html', '路线图'],
+    ['learning-paths.html', '学习路径'], ['certifications.html', '认证'], ['projects.html', '实战项目'],
+    ['manuals.html', '技术手册'], ['glossary.html', '术语表'], ['cheatsheets', '速查表'],
+    ['how-to-learn.html', '学习方法'], ['skills.html', 'Agent 技能'],
+    ['inside-an-ai-agent.html', 'Agent 内部机制'], ['about.html', '关于'],
+  ];
+  const files = fs.readdirSync(__dirname).filter(name => name.endsWith('.html') && !name.endsWith('-print.html')).concat([
+    'hubs/phase/tools-and-protocols.html', 'hubs/glossary/activation-checkpointing.html',
+    'cheatsheets/index.html', 'cheatsheets/sglang-serving.html',
+    'lessons/13-tools-and-protocols/32-program-anatomy-elf-from-scratch/index.html',
+    'project/binary-inspector/index.html',
+  ]);
+  let checked = 0;
+  for (const file of files) {
+    const html = fs.readFileSync(path.join(__dirname, file), 'utf8');
+    const nav = html.match(/<nav\b[^>]*class="header-nav"[^>]*>([\s\S]*?)<\/nav>/);
+    if (!nav) continue; // Standalone print/404 surfaces have no shared navigation.
+    const links = [...nav[1].matchAll(/<a href="([^"]+)"[^>]*data-header-page="[^"]+"[^>]*>([^<]+)<\/a>/g)]
+      .map(match => [new URL(match[1], 'https://aieng-zh.cn/' + file).href, match[2]]);
+    assert.deepEqual(links, expected.map(([href, label]) => [new URL(href, 'https://aieng-zh.cn/').href, label]), file);
+    assert.doesNotMatch(nav[1], /header-mobile-only/, file);
+    assert.equal((nav[1].match(/class="header-github"/g) || []).length, 1, file);
+    assert.match(html, /header\.js\?v=20261019c/, file);
+    const shell = html.match(/<header\b[^>]*class="site-header"[^>]*>[\s\S]*?<\/header>/)[0];
+    assert.equal((shell.match(/class="search-toggle"/g) || []).length, 1, file);
+    assert.match(shell, /<circle cx="11" cy="11" r="8"\/>/, file);
+    assert.doesNotMatch(shell, /⌕/, file);
+    assert.equal((shell.match(/id="themeToggle"/g) || []).length, 1, file);
+    assert.equal((shell.match(/class="header-narration-slot"/g) || []).length, 1, file);
+    assert.match(shell, /class="logo-label">AI \/ FROM SCRATCH<\/span>/, file);
+    checked++;
+  }
+  assert.ok(checked >= 25, `only ${checked} shared headers checked`);
 });

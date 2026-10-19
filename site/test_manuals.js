@@ -145,7 +145,7 @@ test('rejects constructs outside the subset', () => {
   assert.throws(() => manuals.parseDocument('# T\n\n- a\n  - b\n', 'x'), /nested lists/);
   assert.throws(() => manuals.parseDocument('# T\n\n<div>x</div>\n', 'x'), /raw HTML/);
   assert.throws(() => manuals.parseDocument('# T\n\n---\n', 'x'), /horizontal rules/);
-  assert.throws(() => manuals.parseDocument('# T\n\n```figure\nid: f-1\nkind: chart\ntitle: t\nclaim: c.\ncaption: c\n```\n', 'x'), /kind must be one of/);
+  assert.throws(() => manuals.parseDocument('# T\n\n```figure\nid: f-1\nkind: unsupported\ntitle: t\nclaim: c.\ncaption: c\n```\n', 'x'), /kind must be one of/);
 });
 
 test('inline markup escapes HTML and records cross references with their location', () => {
@@ -336,7 +336,7 @@ test('web output is flat, lists only ready manuals, and a scoped build leaves ot
   assert.ok(!fs.existsSync(path.join(site, 'manual-other-101.html')));
   const page = fs.readFileSync(path.join(site, 'manual-demo-101.html'), 'utf8');
   assert.match(page, /noindex/);
-  assert.match(page, /<script src="header\.js" defer>/);
+  assert.match(page, /<script src="header\.js\?v=[a-z0-9]+" defer>/);
   assert.doesNotMatch(page, /Download the PDF/);
   fs.writeFileSync(path.join(dir, 'manual.json'), manifest({ status: 'ready' }));
   fs.writeFileSync(path.join(dir, 'README.md'), '# Demo\n');
@@ -536,8 +536,8 @@ test('Chinese web and offline print output use genuine URLs and mark historic ev
   assert.doesNotMatch(data, /"pdf"/);
   assert.doesNotMatch(print, /<script|fonts\.googleapis\.com/);
   assert.match(print, /name="robots" content="noindex"/);
-  assert.match(html, /src="header\.js"/);
-  assert.match(index, /aria-label="搜索"/);
+  assert.match(html, /src="header\.js\?v=[a-z0-9]+"/);
+  assert.match(index, /data-cmd-palette aria-label="搜索（⌘K）"/);
 });
 
 test('PDF downloads link only the two published ready manuals and never enter print output', () => {

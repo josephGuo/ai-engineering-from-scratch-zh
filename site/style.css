@@ -9,7 +9,7 @@
   --bg-surface-hover: #ece9dc;
   --ink: #1a1a1a;
   --ink-soft: #4a4a4a;
-  --ink-mute: #7a7a78;
+  --ink-mute: #666660;
   --rule: #1a1a1a;
   --rule-soft: rgba(26, 26, 26, 0.16);
   --paper-rule: rgba(26, 26, 26, 0.08);
@@ -59,7 +59,7 @@
   --bg-surface-hover: #1b2244;
   --ink: #e8e6dc;
   --ink-soft: #a8a6a0;
-  --ink-mute: #7a7878;
+  --ink-mute: #96948e;
   --rule: #e8e6dc;
   --rule-soft: rgba(232, 230, 220, 0.18);
   --paper-rule: rgba(232, 230, 220, 0.08);
@@ -265,7 +265,7 @@ p.dropcap::first-letter {
 
 .header-inner {
   width: 100%;
-  max-width: 1360px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 0 28px;
   height: 64px;
@@ -286,7 +286,7 @@ p.dropcap::first-letter {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
   margin-inline-end: auto;
   white-space: nowrap;
@@ -450,6 +450,7 @@ p.dropcap::first-letter {
 }
 
 .theme-toggle {
+  flex-shrink: 0;
   background: transparent;
   border: 1px solid var(--rule-soft);
   width: 36px;
@@ -629,6 +630,7 @@ p.dropcap::first-letter {
 }
 
 .modal-close:focus-visible,
+.modal-search:focus-visible,
 .modal-lesson-open:focus-visible,
 .modal-lesson-toggle:focus-visible,
 .modal-reset:focus-visible {
@@ -717,6 +719,53 @@ p.dropcap::first-letter {
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform var(--motion-enter) var(--ease-out);
+}
+
+.modal-search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.modal-search-wrap[hidden] {
+  display: none;
+}
+
+.modal-search-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.modal-search {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: 0;
+  color: var(--ink);
+  outline: none;
+  transition: border-color var(--motion-feedback) ease;
+}
+
+.modal-search::placeholder {
+  color: var(--ink-mute);
+}
+
+.modal-search:focus {
+  border-color: var(--blueprint);
+}
+
+.modal-search[type="search"]::-webkit-search-decoration,
+.modal-search[type="search"]::-webkit-search-cancel-button,
+.modal-search[type="search"]::-webkit-search-results-button,
+.modal-search[type="search"]::-webkit-search-results-decoration {
+  display: none;
 }
 
 .modal-footer {
@@ -1147,7 +1196,7 @@ body.js-anim .toc-row.in-view {
   }
 }
 
-@media (max-width: 1480px) and (min-width: 1401px) {
+@media (max-width: 1560px) and (min-width: 1401px) {
   .header-inner {
     padding: 0 24px;
     gap: 8px;
@@ -1582,6 +1631,13 @@ body.js-anim .toc-row.in-view {
     width: 44px;
     height: 44px;
     font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .logo {
+    font-size: 0.95rem;
+    gap: 4px;
   }
 }
 
@@ -2444,4 +2500,35 @@ body[data-palette-open] {
   .search-toggle {
     flex-shrink: 0;
   }
+}
+
+/* Stable toolbar geometry whether page narration is available or not. */
+.header-narration-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+}
+.header-mobile-tools .header-narration-slot { flex-basis: 44px; width: 44px; height: 44px; }
+.header-mobile-tools .header-narration-slot:empty { display: none; }
+
+/* Keep the centered shell in place across short and scrollable pages. */
+html { scrollbar-gutter: stable; }
+
+/* Shared document rhythm for help, policy and developer pages. */
+.trust-page h1 { margin-block-end: 20px; }
+.trust-page h2 { margin-block-end: 12px; }
+.trust-page p + p { margin-block-start: 16px; }
+.trust-page ul,
+.trust-page ol { padding-inline-start: 1.4em; margin-block: 12px 20px; }
+.trust-page li + li { margin-block-start: 6px; }
+.trust-page pre { margin-block: 16px; }
+.trust-page .about-eyebrow {
+  margin-block-end: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  color: var(--blueprint);
 }

@@ -10,7 +10,7 @@
   var CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
   var COMPACT_HEADER_QUERY = '(max-width: 1400px)';
   var NARROW_HEADER_QUERY = '(max-width: 820px)';
-  var NARRATION_VERSION = '20260831a';
+  var NARRATION_VERSION = '20261019a';
   var HEADER_BASE = document.currentScript && document.currentScript.src
     ? new URL('.', document.currentScript.src).href
     : '';
@@ -32,6 +32,7 @@
       try {
         var resolved = new URL(href, (locationValue || window.location).href);
         if (resolved.origin !== (locationValue || window.location).origin) return href;
+        href = resolved.pathname + resolved.search + resolved.hash;
       } catch (_) {
         return href;
       }
@@ -39,6 +40,10 @@
     if (/^\/(lesson|certification)(?=[?#]|$)/.test(href)) {
       return href.replace(/^\/(lesson|certification)(?=[?#]|$)/, '$1.html');
     }
+    if (/^\/cheatsheets(?:\/|$)/.test(href)) {
+      return href.replace(/^\/cheatsheets(?=[?#]|$)/, '/cheatsheets/index.html').replace(/^(\/cheatsheets\/[a-z0-9-]+)(?=[?#]|$)/, '$1.html');
+    }
+    if (/^\/roadmap(?=[?#]|$)/.test(href)) return href.replace('/roadmap', '/prereqs.html');
     return href.replace(/(^|\/)(lesson|certification)(?=[?#]|$)/, '$1$2.html');
   }
 
@@ -161,8 +166,8 @@
   function ensureNarration() {
     var current = pageFile(location.href);
     // 首页和课程表是密集导航界面，不挂载全页朗读；其他内容页（含认证）加载。
-    var isHome = current === 'index.html' && !/\/lessons\//.test(location.pathname || '');
-    if (isHome || current === 'catalog.html') return;
+    var isHome = /^\/(?:index\.html)?$/.test(sitePath());
+    if (isHome || current === 'catalog.html' || document.querySelector('.site-header[data-header-narration=\"off\"]') || !document.querySelector('.theme-toggle')) return;
     if (window.__AIFS_TTS_VERSION === NARRATION_VERSION || document.querySelector('script[data-aifs-tts="' + NARRATION_VERSION + '"]')) return;
     var script = document.createElement('script');
     script.src = HEADER_BASE + 'tts.js?v=' + NARRATION_VERSION;
@@ -183,6 +188,17 @@
     }
   }
 
+  function sitePath() {
+    var pathname = location.pathname || '/';
+    if (HEADER_BASE) {
+      try {
+        var base = new URL(HEADER_BASE).pathname;
+        if (pathname.indexOf(base) === 0) pathname = '/' + pathname.slice(base.length);
+      } catch (_) {}
+    }
+    return pathname;
+  }
+
   function syncCurrentPage(header) {
     var nav = header.querySelector('.header-nav');
     var logo = header.querySelector('.logo');
@@ -193,19 +209,23 @@
     if (logo) logo.removeAttribute('aria-current');
 
     var current = pageFile(location.href);
-    if (current === 'index.html') {
+    var pathname = sitePath();
+    if (/^\/(?:index\.html)?$/.test(pathname)) {
       if (logo) logo.setAttribute('aria-current', 'page');
       return;
     }
 
     var target = current;
-    if (current === 'project.html') target = 'projects.html';
+    if (current === 'roadmap.html' || current === 'path.html') target = 'prereqs.html';
+    if (current === 'project.html' || /^\/project\//.test(pathname)) target = 'projects.html';
     if (/^manual-/.test(current)) target = 'manuals.html';
-    if (/^\/glossary\//.test(location.pathname)) target = 'glossary.html';
-    if (/^\/phase\//.test(location.pathname)) target = 'catalog.html';
+    if (/^\/(?:hubs\/)?glossary\//.test(pathname)) target = 'glossary.html';
+    if (/^\/(?:hubs\/)?phase\//.test(pathname) || /^\/lessons\//.test(pathname)) target = 'catalog.html';
+    if (/^\/cheatsheets(?:\/|$)/.test(pathname)) target = 'cheatsheets.html';
     if (current === 'certification.html' || current === 'assessment.html') {
       target = 'certifications.html';
     } else if (current === 'lesson.html') {
+      target = 'catalog.html';
       try {
         var params = new URLSearchParams(location.search);
         var lessonPath = params.get('path') || '';
@@ -216,32 +236,12 @@
     }
 
     for (var j = 0; j < links.length; j++) {
-      if (pageFile(links[j].href) === target) {
+      var page = links[j].getAttribute('data-header-page') || pageFile(links[j].href).replace(/\.html$/, '');
+      if (page === target.replace(/\.html$/, '')) {
         links[j].setAttribute('aria-current', 'page');
         break;
       }
     }
-  }
-
-  function ensureNavigationLink(nav, filename, label, className) {
-    var links = nav.querySelectorAll('a');
-    for (var i = 0; i < links.length; i++) {
-      if (pageFile(links[i].href) === filename) return;
-    }
-
-    var link = document.createElement('a');
-    link.href = HEADER_BASE + filename;
-    link.className = className || '';
-    link.textContent = label;
-    var github = nav.querySelector('.header-github');
-    nav.insertBefore(link, github || null);
-  }
-
-  function addNavigationLinks(nav) {
-    ensureNavigationLink(nav, 'projects.html', '实战项目', '');
-    ensureNavigationLink(nav, 'manuals.html', '技术手册', '');
-    ensureNavigationLink(nav, 'learning-paths.html', '学习路径', '');
-    ensureNavigationLink(nav, 'certifications.html', '认证', 'header-mobile-only');
   }
 
   function setupNavigation(header) {
@@ -250,7 +250,6 @@
     var logo = header.querySelector('.logo');
     if (!inner || !nav || !logo || inner.querySelector('.header-menu-toggle')) return;
 
-    addNavigationLinks(nav);
     syncCurrentPage(header);
 
     navId += 1;
@@ -278,8 +277,8 @@
       return child.tagName === 'A';
     });
     routeLinks.forEach(function (link) {
+      if (!link.hasAttribute('data-header-priority')) return;
       var target = pageFile(link.href);
-      if (target !== 'index.html' && target !== 'catalog.html' && target !== 'learning-paths.html') return;
       var marker = document.createComment('header-priority-' + target);
       nav.insertBefore(marker, link);
       priorityEntries.push({ link: link, marker: marker });
@@ -423,9 +422,77 @@
     syncLayout();
   }
 
+  // Existing page handlers retain ownership. Newly equipped utility pages use
+  // this handler, so one click can never toggle the theme twice.
+  function setupHeaderTheme(header) {
+    if (header.getAttribute('data-header-theme-owner') !== 'header') return;
+    var button = header.querySelector('#themeToggle');
+    var root = document.documentElement;
+    var stored = '';
+    try { stored = localStorage.getItem('theme') || ''; } catch (_) {}
+    root.setAttribute('data-theme', stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    function paintTheme() {
+      var icon = button.querySelector('#themeIcon');
+      if (icon) icon.textContent = root.getAttribute('data-theme') === 'light' ? 'N' : 'D';
+    }
+    paintTheme();
+    button.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (_) {}
+      paintTheme();
+    });
+  }
+
+  // Content-only pages load the shared course index on the first search.
+  // Cache and retry the load; do not add 1 MB to every initial page visit.
+  function setupHeaderSearch(header) {
+    if (window.CmdPalette) return;
+    var button = header.querySelector('[data-cmd-palette]');
+    var pending = null;
+    var searchTitle = button.title;
+    function loadScript(name) {
+      return new Promise(function (resolve, reject) {
+        var script = document.createElement('script');
+        script.src = HEADER_BASE + name + '?v=20261019a';
+        script.onload = resolve;
+        script.onerror = function () { script.remove(); reject(new Error('search asset unavailable')); };
+        document.head.appendChild(script);
+      });
+    }
+    function openSearch() {
+      if (window.CmdPalette) { window.CmdPalette.open(); return; }
+      button.setAttribute('aria-busy', 'true');
+      button.removeAttribute('data-search-error');
+      if (!pending) pending = (typeof PHASES === 'undefined' ? loadScript('data.js') : Promise.resolve())
+        .then(function () { return loadScript('cmdpalette.js'); });
+      pending.then(function () {
+        button.removeAttribute('aria-busy');
+        button.title = searchTitle;
+        window.CmdPalette.open();
+      }).catch(function () {
+        pending = null;
+        button.removeAttribute('aria-busy');
+        button.setAttribute('data-search-error', 'true');
+        button.title = '搜索暂不可用，点击重试';
+      });
+    }
+    button.addEventListener('click', function () { if (!window.CmdPalette) openSearch(); });
+    document.addEventListener('keydown', function (event) {
+      if (!window.CmdPalette && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        openSearch();
+      }
+    });
+  }
+
   function load() {
     var headers = document.querySelectorAll('.site-header');
-    for (var i = 0; i < headers.length; i++) setupNavigation(headers[i]);
+    for (var i = 0; i < headers.length; i++) {
+      setupHeaderTheme(headers[i]);
+      setupHeaderSearch(headers[i]);
+      setupNavigation(headers[i]);
+    }
     loadStars();
     ensureNarration();
   }
