@@ -461,13 +461,13 @@ function writeMarkdown(file, { name, description, version }) {
 }
 
 test('shared site asset families use the expected cache keys on every page', () => {
-  const release = '20260831a';
-  const appRelease = '20261019a';
-  const styleRelease = '20261021a';
+  const release = '20261026a';
+  const appRelease = '20261026a';
+  const styleRelease = '20261026a';
   const navigationRelease = HEADER_ASSET_VERSION;
   assert.match(navigationRelease, /^\d{8}[a-z]$/);
   const narrationRelease = '20261021a';
-  const roadmapRelease = '20261019a';
+  const roadmapRelease = '20261026a';
   const pages = [
     'about.html',
     'assessment.html',
@@ -495,8 +495,8 @@ test('shared site asset families use the expected cache keys on every page', () 
     }
     assert.equal(versionFor(source, 'progress.js'), release, `${page} has stale progress.js`);
     assert.equal(versionFor(source, 'header.js'), navigationRelease, `${page} has stale header.js`);
-    assert.equal(versionFor(source, 'cmdpalette.js'), '20261019a', `${page} has stale cmdpalette.js`);
-    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), '20261019a', `${page} has stale certifications.js`);
+    assert.equal(versionFor(source, 'cmdpalette.js'), '20261026a', `${page} has stale cmdpalette.js`);
+    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), '20261026a', `${page} has stale certifications.js`);
   }
 
   assert.equal(versionFor(sourceFor('index.html'), 'app.js'), appRelease);
@@ -674,6 +674,7 @@ test('build-time SEO manifests cover every readable lesson and expose canonical 
   assert.equal((certificationDiscovery.match(/href="certification\?id=/g) || []).length, certifications.tracks.length);
   assert.ok((certificationDiscovery.match(/href="\/lesson\?path=/g) || []).length >= expectedCertificationPaths.length);
   assert.doesNotMatch(catalogDiscovery, /lesson\.html\?/);
+  assert.doesNotMatch(catalogDiscovery, /<td>(?:Build|Learn|Capstone|Reference|complete|in-progress|planned)<\/td>/, 'no-JavaScript discovery displays Chinese labels rather than internal enums');
 
   for (const file of ['index.html', 'prereqs.html']) {
     const source = fs.readFileSync(path.join(__dirname, file), 'utf8');
@@ -1569,7 +1570,7 @@ test('shared header progressively compacts without hiding GitHub stars or search
   const styles = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
   const movableTools = headerSource.match(/function isMovableTool\(child\) \{([\s\S]*?)\n    \}/);
 
-  assert.match(headerSource, /var COMPACT_HEADER_QUERY = '\(max-width: 1400px\)'/);
+  assert.match(headerSource, /var COMPACT_HEADER_QUERY = '\(max-width: 1480px\)'/);
   assert.match(headerSource, /var NARROW_HEADER_QUERY = '\(max-width: 820px\)'/);
   assert.match(headerSource, /priorityNav\.className = 'header-priority-nav'/);
   assert.match(headerSource, /link\.hasAttribute\('data-header-priority'\)/);
@@ -1596,8 +1597,8 @@ test('shared header progressively compacts without hiding GitHub stars or search
 
   assert.match(styles, /\.header-inner\s*\{[\s\S]*?width: 100%;[\s\S]*?max-width: 1480px;[\s\S]*?min-width: 0;/);
   assert.match(styles, /\.header-nav,\s*\n\.header-priority-nav\s*\{[\s\S]*?white-space: nowrap;/);
-  assert.match(styles, /@media \(max-width: 1560px\) and \(min-width: 1401px\)/);
-  assert.match(styles, /@media \(max-width: 1400px\) \{[\s\S]*?\.header-priority-nav\s*\{[\s\S]*?\.header-inner > \.header-github[\s\S]*?\.header-inner > \.search-toggle[\s\S]*?\.header-nav\s*\{[\s\S]*?width: min\(360px, calc\(100vw - 32px\)\);[\s\S]*?overflow-y: auto;/);
+  assert.match(styles, /@media \(max-width: 1560px\) and \(min-width: 1481px\)/);
+  assert.match(styles, /@media \(max-width: 1480px\) \{[\s\S]*?\.header-priority-nav\s*\{[\s\S]*?\.header-inner > \.header-github[\s\S]*?\.header-inner > \.search-toggle[\s\S]*?\.header-nav\s*\{[\s\S]*?width: min\(360px, calc\(100vw - 32px\)\);[\s\S]*?overflow-y: auto;/);
   assert.match(styles, /@media \(max-width: 820px\) \{[\s\S]*?\.header-priority-nav\s*\{\s*display: none;[\s\S]*?\.header-inner > \.header-github[\s\S]*?\.header-inner > \.search-toggle/);
   assert.match(styles, /@media \(max-width: 480px\) \{[\s\S]*?\.header-inner > \.header-github svg\s*\{\s*display: none;[\s\S]*?\.header-inner > \.header-github::before/);
 });
@@ -1806,16 +1807,19 @@ test('lesson reader keeps learning-path context and renders a copyable full-dept
   assert.match(lessonHtml, /@media \(max-width: 480px\) \{[\s\S]*?\.code-card-actions,[\s\S]*?\.output-actions \{[\s\S]*?grid-template-columns: 1fr;/);
   assert.match(lessonHtml, /仓库根目录（包含 README\.md 和 phases\/ 的目录）运行/);
   assert.doesNotMatch(lessonHtml, /shell is anywhere inside the repository/);
-  assert.match(lessonHtml, /inferLearningPath\(lessonPath\)/);
-  assert.match(lessonHtml, /preferredIds = \['agent-skills', 'model-context-protocol'\]/);
+  assert.match(lessonHtml, /learningPath = !certificationMode && !certificationSupplementalMode\s*\? findLearningPath\(requestedLearningPathId\)\s*:\s*null/);
+  assert.doesNotMatch(lessonHtml, /inferLearningPath\(lessonPath\)/);
+  assert.doesNotMatch(lessonHtml, /preferredIds = \['agent-skills', 'model-context-protocol'\]/);
   assert.match(lessonHtml, /代码围栏不自动等于可运行程序/);
   assert.equal((lessonHtml.match(/var fetchOptions = localPreview \? \{ cache: 'no-store' \} : undefined/g) || []).length, 2);
   assert.match(lessonHtml, /fetch\(rawUrl, fetchOptions\)/);
   assert.match(lessonHtml, /fetch\(quizUrl, fetchOptions\)/);
   assert.doesNotMatch(lessonHtml, /<script src="figures(?:\.js|-(?!manifest))/);
   assert.match(lessonHtml, /<script src="figure-manifest\.js/);
-  assert.match(lessonHtml, /<script src="figures-manifest\.js\?v=20261019a/);
-  assert.match(lessonHtml, /<script src="progress\.js\?v=20260831a/);
+  const localeLoaderVersion = crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, 'figures-manifest.js'))).digest('hex').slice(0, 12);
+  assert.ok(lessonHtml.includes('<script src="figures-manifest.js?v=' + localeLoaderVersion + '"'),
+    'the lesson must load the current content-addressed locale loader');
+  assert.match(lessonHtml, /<script src="progress\.js\?v=20261026a/);
   assert.match(fs.readFileSync(path.join(__dirname, 'lesson-figures.js'), 'utf8'), /providerBaseUrl \+ provider/);
   assert.match(lessonHtml, /import\('https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11/);
 });
@@ -2130,7 +2134,7 @@ function loadContextCacheConsumer({ failOnce = false } = {}) {
   context.document.head.appendChild = script => {
     append(script);
     if (script.tagName !== 'script') return script;
-    const provider = script.src.split('/').at(-1).split('?')[0];
+    const provider = new URL(script.src, 'https://course.example/').pathname.replace(/^\//, '');
     requests.push(provider);
     queueMicrotask(() => {
       if (failOnce && provider === 'figures-llmeng.js') {
@@ -2150,7 +2154,9 @@ function loadContextCacheConsumer({ failOnce = false } = {}) {
   const root = runtime.element('article');
   root.appendChild(host);
   root.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [host] : [];
-  return { ...runtime, host, root, requests, warnings };
+  const localeRequests = ['lesson-figures.js', 'figures-llmeng.js', 'figures-claude-certifications.js']
+    .map(file => 'figure-locales/' + file).filter(file => fs.existsSync(path.join(__dirname, file)));
+  return { ...runtime, host, root, requests, warnings, localeRequests };
 }
 
 function cacheNodes(root, predicate) {
@@ -2172,7 +2178,7 @@ test('04 context cache consumer lazily loads real prefix and semantic renderers'
   t.diagnostic(JSON.stringify({ fence: '04-context-cache', requests: runtime.requests, prefix: typeof runtime.window.LESSON_FIGURES['prompt-cache-hit'], semantic: typeof runtime.window.LESSON_FIGURES['semantic-cache'], inputCount: cacheNodes(runtime.host, node => node.tagName === 'input').length }));
   assert.equal(typeof runtime.window.LESSON_FIGURES['prompt-cache-hit'], 'function');
   assert.equal(typeof runtime.window.LESSON_FIGURES['semantic-cache'], 'function');
-  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', 'figures-i18n-zh.js']);
+  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', ...runtime.localeRequests, 'figures-i18n-zh.js']);
   assert.equal(runtime.host.dataset.lfMounted, '1');
   assert.equal(cacheNodes(runtime.host, node => node.className === 'cf-shell').length, 1);
   let ranges = cacheNodes(runtime.host, node => node.tagName === 'input');
@@ -2204,7 +2210,7 @@ test('04 context cache consumer lazily loads real prefix and semantic renderers'
   remountRoot.querySelectorAll = selector => selector === '.lesson-figure[data-figure]' ? [remountHost] : [];
   await runtime.window.AIFS_mountLessonFigures(remountRoot);
   assert.equal(cacheNodes(remountHost, node => node.className === 'cf-shell').length, 1);
-  assert.equal(runtime.requests.length, 3, 'remount must reuse provider loads');
+  assert.equal(runtime.requests.length, 3 + runtime.localeRequests.length, 'remount must reuse provider and locale loads');
   assert.deepEqual(runtime.warnings, []);
   t.diagnostic('prefix saved: 56.0% -> 40.0% (prefix 70 -> 50, hit 80); semantic: 4/10 hits, 0 wrong -> 8/10 hits, 3 wrong (threshold .85 -> .70); prefix reset: 56.0%');
 });
@@ -2224,7 +2230,7 @@ test('04 context cache missing dependency fails loudly and retries without an em
   await runtime.window.AIFS_mountLessonFigures(runtime.root);
   assert.equal(runtime.host.dataset.lfMounted, '1');
   assert.equal(cacheNodes(runtime.host, node => node.tagName === 'input').length, 2);
-  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', 'figures-i18n-zh.js', 'figures-llmeng.js']);
+  assert.deepEqual(runtime.requests, ['figures-llmeng.js', 'figures-claude-certifications.js', ...runtime.localeRequests, 'figures-i18n-zh.js', 'figures-llmeng.js']);
 });
 
 test('04 context cache manifest guard delegates unchanged and rewraps provider registrations once', async () => {
@@ -2281,7 +2287,7 @@ test('04 context cache manifest guard delegates unchanged and rewraps provider r
   assert.equal(calls.length, 2);
   runtime.window.AIFSFigureRuntime.disposeRoot(retryRoot);
   assert.equal(disposed, 1, 'delegated disposer must remain owned by the shared runtime');
-  assert.equal(runtime.requests.length, 3);
+  assert.equal(runtime.requests.length, 3 + runtime.localeRequests.length);
 });
 
 test('04 context cache manifest requires real dependency registrations even with only its fence', t => {
@@ -2581,7 +2587,7 @@ test('all shared headers render one complete menu before JavaScript runs', () =>
   const expected = [
     ['index.html#contents', '课程目录'], ['catalog.html', '课程表'], ['prereqs.html', '路线图'],
     ['learning-paths.html', '学习路径'], ['certifications.html', '认证'], ['projects.html', '实战项目'],
-    ['manuals.html', '技术手册'], ['glossary.html', '术语表'], ['cheatsheets', '速查表'],
+    ['manuals.html', '技术手册'], ['glossary.html', '术语表'], ['cheatsheets', '速查表'], ['practice', '编程练习'],
     ['how-to-learn.html', '学习方法'], ['skills.html', 'Agent 技能'],
     ['inside-an-ai-agent.html', 'Agent 内部机制'], ['highlights.html', '我的高亮'], ['about.html', '关于'],
   ];

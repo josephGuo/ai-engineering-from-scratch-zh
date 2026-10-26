@@ -19,7 +19,7 @@ RLHF（Christiano 等人 2017；Ouyang 等人 2022）把偏好转成一个奖励
 
 ## 核心概念
 
-![Three-stage RLHF: SFT, RM training on pairwise prefs, PPO with KL penalty](../assets/rlhf.svg)
+![RLHF 三阶段：监督微调、根据成对偏好训练奖励模型，以及带 KL 惩罚的 PPO](../assets/rlhf.svg)
 
 **第 1 阶段：监督微调（SFT）。** 从一个预训练基座模型开始。在目标行为的人写示范（遵循指令的回复、有帮助的答复等）上微调。结果：一个*偏向好行为*但动作空间仍无界的模型 $\pi_{\text{SFT}}$。
 
@@ -113,7 +113,7 @@ def rlhf_step(theta, ref, w, prompt, rng, eps=0.2, beta=0.1, lr=0.05):
 
 ### 第 4 步：盯住 KL
 
-每次更新都跟踪平均 $\mathrm{KL}(\pi_\theta \Vert \pi_{\text{ref}})$。如果它爬过 `~5-10`，策略就漂得离 $\pi_{\text{SFT}}$ 太远了——要么 $\beta$ 调低过头了，要么奖励 hacking 开始了。这是真 RLHF 里头号诊断量。
+每次更新都跟踪平均 $\mathrm{KL}(\pi_\theta \Vert \pi_{\text{ref}})$。如果它超过 `~5-10`（按每个回复的 token 求和，单位是 nat；这是 TRL 记录的口径），策略就已经离 $\pi_{\text{SFT}}$ 太远。原因可能是 $\beta$ 太低，应提高它把策略拉回来；也可能是奖励 hacking 开始了。这是真 RLHF 里头号诊断量。
 
 ### 第 5 步：用 TRL 的生产配方
 

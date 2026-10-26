@@ -1,4 +1,4 @@
-# Cross-Encoder Reranker
+# 交叉编码器重排器
 
 > Bi-encoder 把 query 和 document 各自独立 embed。Cross-encoder 把它们拼起来、一次性同时阅读。Cross-encoder 是最聪明的读者，也是最慢的那个。把它当作第二级、跑在 bi-encoder 的 top-k 上，它就能把自己的开销赚回来。
 
@@ -91,7 +91,7 @@ python3 code/main.py
 
 **Cross-encoder 不对称。** `rerank(q, d)` 和 `rerank(d, q)` 是不同的分数。永远把 query 放前面。要是你不小心调换了，recall 会崩。
 
-**N 太低，暴露不出 bug。** 如果你设 N = K，cross-encoder 没法重排序，只能重新加权。提升看起来是零。把 N 设成至少 K 的三倍。
+**N 太低，暴露不出 bug。** 如果你设 N = K，cross-encoder 可以重排这 K 个候选，但不能把新候选带进 top K。Recall@K 不会变化，提升看起来是零。把 N 设成至少 K 的三倍。
 
 **训练数据漏进了评测。** 如果手工标注的训练对包含了评测 query，重排会显得像魔法一样。严格隔开 train 和 eval，哪怕是在 fixture 上。
 

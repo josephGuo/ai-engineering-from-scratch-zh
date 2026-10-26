@@ -21,7 +21,7 @@ Atari 上的 DQN 第一次让单一架构、单一套超参数，从原始像素
 
 ## 核心概念
 
-![DQN training loop: env, replay buffer, online net, target net, Bellman TD loss](../assets/dqn.svg)
+![DQN 训练循环：环境、回放缓冲区、在线网络、目标网络与贝尔曼时序差分损失](../assets/dqn.svg)
 
 **目标函数。** DQN 在一个神经 Q 函数上最小化单步 TD 损失：
 
@@ -72,7 +72,7 @@ class ReplayBuffer:
         return rng.sample(self.buf, batch)
 ```
 
-Atari 用约 50000 容量；我们的玩具环境 5000 就够。
+Atari 的回放缓冲区容量约为 $10^6$，与原始 DQN 一致；训练开始前会先收集 50000 条转移。我们的玩具环境用 5000 就够。
 
 ### 第 2 步：一个极小的 Q 网络（手写 MLP）
 

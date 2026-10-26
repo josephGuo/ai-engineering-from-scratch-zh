@@ -5,7 +5,7 @@ subtitle: 在 microVM 中运行 agent，控制网络与密钥并取回提交。�
 hue: 210
 sources: manuals/docker-sandboxes-101
 code: DS
-source_hash: e44b4e9908d4e31b
+source_hash: b823090bd3ff67d4
 ---
 
 ## 各组件运行位置

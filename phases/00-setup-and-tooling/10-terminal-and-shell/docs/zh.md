@@ -1,4 +1,4 @@
-# Terminal & Shell
+# 终端与 Shell
 
 > 终端是 AI 工程师生活的地方。在这儿待舒服点。
 
@@ -97,7 +97,7 @@ python train.py > output.log 2> errors.log
 python train.py > train_full.log 2>&1
 ```
 
-你需要的三个重定向：
+你需要掌握四种重定向和一种管道：
 
 | 符号 | 它干什么 |
 |--------|-------------|

@@ -1,0 +1,76 @@
+export const SOURCES = {
+  l4Page: "https://www.nvidia.com/en-us/data-center/l4/",
+  l4Brief: "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/l4/PB-11316-001_v01.pdf",
+  ada: "https://images.nvidia.com/aem-dam/Solutions/geforce/ada/nvidia-ada-gpu-architecture.pdf",
+  sparkPage: "https://www.nvidia.com/en-us/products/workstations/dgx-spark/",
+  sparkGuide: "https://docs.nvidia.com/dgx/dgx-spark/hardware.html",
+  gb10HotChips: "https://hc2025.hotchips.org/assets/program/conference/day2/21_nvidia_skende_final.pdf",
+};
+
+const spec = (value, source, where) => ({ value, source, where });
+
+export const SPECS = {
+  l4: {
+    name: "NVIDIA L4",
+    architecture: spec("Ada Lovelace, AD104", "ada", "附录 D，表 5"),
+    gpcs: spec(5, "ada", "附录 D，表 5"),
+    tpcs: spec(29, "ada", "附录 D，表 5"),
+    sms: spec(58, "ada", "附录 D，表 5"),
+    cudaCores: spec(7424, "ada", "附录 D，表 5"),
+    tensorCores: spec(232, "ada", "附录 D，表 5"),
+    tensorPerSm: spec(4, "ada", "附录 D，表 5"),
+    tensorGen: spec("第四代，支持 FP8", "ada", "Ada 第四代 Tensor Core"),
+    l2MB: spec(48, "ada", "附录 D，表 5：49152 KB"),
+    memory: spec("24 GB GDDR6，支持 ECC", "l4Brief", "表 2"),
+    memoryGB: spec(24, "l4Brief", "表 2"),
+    busBits: spec(192, "l4Brief", "表 2"),
+    controllerBits: spec(32, "ada", "AD102：12 个 32 位内存控制器，共 384 位"),
+    memoryClockMHz: spec(6251, "l4Brief", "表 2"),
+    bandwidthGBs: spec(300, "l4Brief", "表 2"),
+    interconnect: spec("PCIe Gen4 x16", "l4Brief", "表 1"),
+    tdpW: spec(72, "l4Brief", "表 1"),
+    clocksMHz: spec("基础频率 795，加速频率 2,040", "l4Brief", "表 1"),
+    formFactor: spec("半高、半长、单槽、被动散热", "l4Brief", "表 1"),
+    boardMm: spec([168.54, 68.9], "l4Brief", "图 3"),
+    fp8Tflops: spec("485（使用稀疏计算）", "l4Page", "产品规格"),
+    bf16Tflops: spec("242（使用稀疏计算）", "l4Page", "产品规格"),
+  },
+  gb10: {
+    name: "NVIDIA GB10",
+    architecture: spec("Grace Blackwell 超级芯片：S 小芯片包含 CPU 和内存子系统，G 小芯片包含 GPU，采用 2.5D 封装", "gb10HotChips", "NVIDIA GB10 表"),
+    process: spec("两颗小芯片均采用 TSMC 3nm 工艺", "gb10HotChips", "NVIDIA GB10 表"),
+    cpu: spec("20 个 Arm 核心：10 个 Cortex-X925、10 个 Cortex-A725，分为两组，每组 10 个", "sparkPage", "规格"),
+    cpuL3MB: spec("每组 16", "gb10HotChips", "NVIDIA GB10 表"),
+    slcMB: spec(16, "gb10HotChips", "NVIDIA GB10 表"),
+    cudaCores: spec(6144, "sparkGuide", "计算性能"),
+    tensorGen: spec("第五代", "sparkPage", "规格"),
+    l2MB: spec(24, "gb10HotChips", "GB10 GPU：大型图形 L2 缓存"),
+    c2cGBs: spec("总计约 600", "gb10HotChips", "GB10 GPU"),
+    memory: spec("128 GB LPDDR5x，支持一致性的统一系统内存", "sparkPage", "规格"),
+    memoryGB: spec(128, "sparkPage", "规格"),
+    busBits: spec(256, "sparkPage", "规格"),
+    channels: spec(16, "sparkGuide", "计算性能：16 个通道（256 位）LPDDR5X 8533"),
+    bandwidthGBs: spec(273, "sparkPage", "规格"),
+    interconnect: spec("两颗小芯片之间的 NVLink-C2C", "gb10HotChips", "NVIDIA GB10 表"),
+    tdpW: spec(140, "sparkPage", "GB10 热设计功耗，包含 CPU 与 GPU"),
+    fp4Pflops: spec("1（使用稀疏计算）", "sparkPage", "规格"),
+    nic: spec("ConnectX-7，200 Gbps；10 GbE RJ-45", "sparkPage", "规格"),
+    smCount: spec(null, "sparkGuide", "未公开：NVIDIA 提供了 6,144 个 CUDA 核心的数据，未给出 SM 数量"),
+  },
+};
+
+export const ABSTRACT = {
+  l4: [
+    "NVIDIA 未公开 24 GB 显存由多少个 GDDR6 封装组成，也未说明它们的位置。图中按每个 32 位通道一个封装绘制，共六个。",
+    "NVIDIA 未公开芯片尺寸、封装尺寸和焊球数量。图中的芯片、基板和焊球按合理尺寸示意，并非精确测量。",
+    "NVIDIA 公布了 L4 含 5 个 GPC、29 个 TPC 和 58 个 SM，但没有指出完整 AD104 中具体关闭了哪个 TPC。深色方块只表示一个 TPC 已关闭，不代表其实际位置。",
+    "芯片中央的 L2 区域参考 Ada 白皮书中的 AD102 方框图。NVIDIA 未公开 AD104 的芯片布局图。",
+    "运行记录没有记下主机 CPU 型号。图中使用通用 x86_64 封装表示主机 CPU。",
+  ],
+  gb10: [
+    "NVIDIA 公布 GB10 有 6,144 个 CUDA core，但没有公布 SM 数量。GPU 小芯片上的抽象方块表示 SM 区域，并非每个方块代表一个 SM。",
+    "NVIDIA 公布了 256 位总线上的 16 个 LPDDR5X 通道，但没有公开封装数量或布局。图中按每个封装两个通道绘制，共八个封装。",
+    "NVIDIA 未公开小芯片尺寸、基板和焊球数量。图中按合理尺寸示意，并非精确测量。",
+    "主板在图中以平板表示。DGX Spark 主板布局尚未公开。",
+  ],
+};

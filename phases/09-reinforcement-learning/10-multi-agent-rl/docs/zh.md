@@ -19,7 +19,7 @@
 
 ## 核心概念
 
-![Four MARL regimes: indep, centralized critic, self-play, league](../assets/marl.svg)
+![四种多智能体强化学习方式：独立学习、中心化评论家、自博弈和联盟](../assets/marl.svg)
 
 **形式化：马尔可夫博弈。** MDP 的推广：状态 $S$、联合动作 $a = (a_1, \ldots, a_n)$、转移 $P(s' \mid s, a)$，以及每个 agent 各自的奖励 $R_i(s, a, s')$。每个 agent $i$ 在自己的策略 $\pi_i$ 下最大化自己的回报。如果奖励相同，就是**完全合作**。如果零和，就是**对抗**。如果混合，就是**一般和**。
 
@@ -86,10 +86,15 @@ def independent_q(env, episodes, alpha, gamma, epsilon):
     Q1, Q2 = defaultdict(default_q), defaultdict(default_q)
     for _ in range(episodes):
         s = env.reset()
+        done = False
         while not done:
             a1 = epsilon_greedy(Q1, s, epsilon)
             a2 = epsilon_greedy(Q2, s, epsilon)
             s_next, r, done = env.step(s, (a1, a2))
+            if done:
+                Q1[s][a1] += alpha * (r - Q1[s][a1])
+                Q2[s][a2] += alpha * (r - Q2[s][a2])
+                break
             target1 = r + gamma * max(Q1[s_next].values())
             target2 = r + gamma * max(Q2[s_next].values())
             Q1[s][a1] += alpha * (target1 - Q1[s][a1])

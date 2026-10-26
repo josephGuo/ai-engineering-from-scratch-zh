@@ -5,14 +5,14 @@ const { figure } = require('../../../_shared/figkit.js');
 const lanes = [
   { x: 70, name: "客户端", hue: 'olive', w: 110 },
   { x: 220, name: 'TokenizerManager', hue: 'blue' },
-  { x: 390, name: 'Scheduler', hue: 'blue' },
+  { x: 390, name: '调度器', hue: 'blue' },
   { x: 560, name: 'Detokenizer', hue: 'blue' },
 ];
 
 module.exports = figure('fig-1-3', {
   height: 470,
   title: "一个 /generate 请求经过三个进程",
-  desc: "四条生命线：客户端、tokenizer manager、scheduler、detokenizer。客户端发送五 token prompt，tokenizer manager 经 ZMQ 发送 ID。Scheduler 匹配两个缓存 token、prefill 三个，889 ms 后返回首 token。随后十一个 decode 步，detokenizer 返回文本，端到端 950 ms。",
+  desc: "四条生命线：客户端、tokenizer manager、scheduler、detokenizer。客户端发送五 token prompt，tokenizer manager 经 ZMQ 发送 ID。Scheduler 匹配两个缓存 token、prefill 三个，68 ms 后返回首 token。随后十一个 decode 步，detokenizer 返回文本，端到端 725 ms。",
 }, f => {
   for (const lane of lanes) {
     f.box({ x: lane.x, y: 10, w: lane.w || 150, h: 30, hue: lane.hue, title: lane.name, titleSize: 12, anchor: 'middle' });
@@ -23,10 +23,10 @@ module.exports = figure('fig-1-3', {
     [1, 2, 'event', "5 个 token ID", "一条 ZMQ 消息"],
     [2, 2, null, 'match_prefix', "2 个 token 已缓存"],
     [2, 2, null, 'prefill', "3 个新 token"],
-    [2, 3, 'event', "首 token", "请求后 889 ms"],
-    [2, 3, 'event', "后续 11 个 token", "decode 步骤，61 ms"],
-    [3, 1, 'event', 'text', 'Paris, and the capital of'],
-    [1, 0, 'reply', '200 OK', 'e2e_latency 0.950 s'],
+    [2, 3, 'event', "首 token", "请求后 68 ms"],
+    [2, 3, 'event', "后续 11 个 token", "decode 步骤，657 ms"],
+    [3, 1, 'event', 'text', 'Paris. The capital of Italy is'],
+    [1, 0, 'reply', '200 OK', 'e2e_latency 0.725 s'],
   ];
   rows.forEach(([from, to, style, label, note], index) => {
     const y = 74 + index * 48;
@@ -42,3 +42,11 @@ module.exports = figure('fig-1-3', {
     f.arrow([x1, y], [x2 + (x2 > x1 ? -1 : 1), y], { style, label, note, labelX: (x1 + x2) / 2 });
   });
 });
+
+// 先用原标签计算图形尺寸，再只替换完整文字节点，保持几何与实测数据不变。
+const readerCopy = {
+  "prefill": "预填充",
+  "text": "文本"
+};
+module.exports = module.exports.replace(/>([^<]*)</g, (node, text) =>
+  Object.prototype.hasOwnProperty.call(readerCopy, text) ? `>${readerCopy[text]}<` : node);
