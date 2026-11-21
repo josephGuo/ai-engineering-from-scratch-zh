@@ -1,6 +1,6 @@
 {
-  "base": "a509402c0b5455d11ddc2b5fa83cc8c0d2e0692b",
-  "target": "8afa245ebc2e8861480edf8c4911a2b6d9769688",
+  "base": "8afa245ebc2e8861480edf8c4911a2b6d9769688",
+  "target": "9712e323fde8cb2ec933310ac619e920e8e31017",
   "pending": [],
   "decisions": [
     {
@@ -290,6 +290,48 @@
         "cheatsheets/production-agent-runtimes.md",
         ".github/workflows/build.yml",
         ".gitignore"
+      ]
+    },
+    {
+      "scope": "上游 8afa245..9712e32 LangChain 101 手册、首页导师入口与分享卡片（2026-11-21）",
+      "decision": "#802：引入 LangChain 101 手册全部 60 节正文、11 节参考、front.md、README.md、capture/README.md 与 manual.json 人读字段并完成中文翻译与全书术语统一；标题保留英文显式 {#s-...} 锚点，listing 与代码块与上游逐字节一致，图表链接文字写「图」由构建自动编号；103 幅图表源码本地化并按中文字宽重建 SVG；移植 manuals/_shared/graphviz-lite.js、marks.js、AUTHORING.md 库手册依赖例外条款、.gitignore 的 capture/demos/*.db、header.js 新手册横幅与 agent-harness 速查表来源登记（source_hash 按 2026-11-11 决策不刷新）；check_manual_outputs 登记 60/11/102，CI 加入 figkit check 与 capture/run.py --check（未装锁定包时按上游契约跳过录制、仍校验 47 份实验摘要）。#806：语义移植首页「从你所在的位置开始」四门入门课（与上游相同四课，链接用 /lessons/ 路由）、Agent 导师区块（命令对应中文仓技能与仓库）、首页删减、课程页桌面侧栏收起并记忆（预渲染与运行时路径）、菜单学习优先级排序、README 改版与 8 幅中文化 SVG；跳过 What's New 页（与 D2=A 一致）、Prefer us on Google 标签（上游站推广）、ui-strings 与 i18n README；导师技能课数随上游改为 542。#816：OG 卡片改为蓝底大标题、角标与品牌页脚，首页卡居中且无侧图，域名与文案中文化，首页描述按句分行。#811：MCPA 17 课缺参题正确答案对调至执行阶段 isError 选项。#815：中文站无 newsletter，跳过。#810：中文站未移植 NLLB 翻译脚本，跳过。已检视基准前移至 9712e32，两个批次在完成 CI、合并与线上生产验证前保留 pending。",
+      "paths": [
+        "manuals/langchain-101/",
+        "manuals/_shared/graphviz-lite.js",
+        "manuals/_shared/marks.js",
+        "manuals/AUTHORING.md",
+        ".gitignore",
+        "site/header.js",
+        "site/index.html",
+        "site/app.js",
+        "site/lesson.html",
+        "lib/site-navigation.js",
+        "lib/og-render.js",
+        "lib/og-cards.js",
+        "README.md",
+        "assets/readme/",
+        "certifications/mcpa/lessons/17-tool-invocation-lifecycle/quiz.json",
+        "cheatsheets/topics.yaml",
+        "cheatsheets/agent-harness.md",
+        "scripts/check_manual_outputs.js",
+        ".github/workflows/build.yml",
+        "skills/start-learning/SKILL.md",
+        "skills/find-your-level/SKILL.md",
+        "site/whats-new.html",
+        "site/newsletter.js",
+        "scripts/translate_lessons.py"
+      ]
+    },
+    {
+      "scope": "LangChain 101 与首页导师批次线上验收及相邻修正（2026-11-21）",
+      "decision": "#158 合并为 88eaa7b 并部署到生产：手册首页与节路由、canonical、手册与首页 OG 图、首页四门入门课与导师区块、课程页侧栏隐藏规则、header 新手册横幅均已在生产部署上核对，关闭 manual-langchain-101 与 site-home-tutor-806-816 两个批次。验收发现 OG 副标题单行截取会丢掉开头（oneLine 的句子正则在 0.7、.gitignore 等非句末点号前不匹配，897 张卡中 29 张受影响，上游同样存在），改为首尾相接的断句（英文 .!? 仅在空白前断句，中文 。！？ 连同后引号断句），check_og_cards 对全部卡片校验副标题保留开头。手册内容修正：r-8 引言与 README 的冲突数按登记表实际 33 行改为 33（上游写 32）；5-4 两处「命名空间隔离」链接改指对应小节锚点（上游指向整节）。site/app.js 的 populateCurriculumSummary 与 intelligence-check 资源在上游同样保留，中文仓单独删除只会增加后续同步冲突，不删，交由上游处理。",
+      "paths": [
+        "lib/og-render.js",
+        "scripts/check_og_cards.js",
+        "scripts/test_og.js",
+        "manuals/langchain-101/README.md",
+        "manuals/langchain-101/sections/r-8-sources-and-conflicts.md",
+        "manuals/langchain-101/sections/5-4-stores-and-long-term-memory.md"
       ]
     }
   ]

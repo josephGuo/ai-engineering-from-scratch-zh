@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { lessonDocumentSeo } = require('../lib/lesson-document');
 const { lessonCard, socialCards } = require('../lib/og-cards');
-const { layout } = require('../lib/og-render');
+const { layout, titleOverflow, descriptionDrift } = require('../lib/og-render');
 const { validateOgCards } = require('../site/og-cards');
 
 const at = process.argv.indexOf('--root');
@@ -19,8 +19,13 @@ function walk(dir) {
       const lessonPath = path.relative(root, path.dirname(dir)).split(path.sep).join('/');
       if (!lessonPath.startsWith('phases/') && !lessonPath.startsWith('certifications/')) continue;
       const seo = lessonDocumentSeo(fs.readFileSync(file, 'utf8'));
-      try { layout(lessonCard({ ...seo, path: lessonPath, context: { kind: lessonPath.startsWith('certifications/') ? 'certification' : 'lesson' } })); }
+      const card = lessonCard({ ...seo, path: lessonPath, context: { kind: lessonPath.startsWith('certifications/') ? 'certification' : 'lesson' } });
+      let wide;
+      try { layout(card); wide = titleOverflow(card); }
       catch (error) { throw Error(`${lessonPath}: ${error.message}`); }
+      if (wide) throw Error(`${lessonPath}: OG title line is wider than the card: ${wide}`);
+      const drift = descriptionDrift(card);
+      if (drift) throw Error(`${lessonPath}: OG description lost its opening, shows: ${drift}`);
       checked++;
     }
   }
@@ -29,7 +34,12 @@ for (const dir of ['phases', 'certifications']) walk(path.join(root, dir));
 const read = name => JSON.parse(fs.readFileSync(path.join(root, 'site', name), 'utf8'));
 const manifestPath = path.join(root, 'site/og-cards.json');
 if (fs.existsSync(manifestPath)) {
-  checked += validateOgCards(read('og-cards.json'), read('lesson-seo.json').lessons, read('certification-seo.json').tracks);
+  const manifest = read('og-cards.json');
+  for (const [id, card] of Object.entries(manifest.cards)) {
+    const drift = descriptionDrift(card);
+    if (drift) throw Error(`${id}: OG description lost its opening, shows: ${drift}`);
+  }
+  checked += validateOgCards(manifest, read('lesson-seo.json').lessons, read('certification-seo.json').tracks);
 } else if (process.argv.includes('--require-manifests')) {
   throw Error('Missing site/og-cards.json; run the integration build first');
 } else {
