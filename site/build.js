@@ -2082,17 +2082,46 @@ function withCard(html, type, id, spec) {
   return cleaned.replace('</head>', cardTags(cardUrl(type, id, spec), spec).join('\n') + '\n</head>');
 }
 
-// 共享脚本一族的缓存键。脚本在浏览器缓存一天、HTML 只缓存五分钟，族内任一脚本内容变化都要升级此键。
-const SHARED_SCRIPT_VERSION = '20261121b';
-// 页面样式表一族的缓存键，规则同上：族内任一样式表内容变化都要升级此键。
+// 页面样式表一族的缓存键。样式表在浏览器缓存一天、HTML 只缓存五分钟，族内任一样式表内容变化都要升级此键。
 const SHARED_STYLE_VERSION = '20261106a';
 
-function versionSharedAssets(html) {
-  return normalizeHeaderNavigation(html).replace(/(\bsrc=["']\/?(?:app|cmdpalette|certifications|projects|project-markdown|projects-data|data|certification-data|langs|md-render|skills-demo|progress|catalog|lesson-walkthrough|practice|practice-store|practice-worker|highlights|highlights-store|highlights-anchor)\.js)(?:\?[^"']*)?(["'])/g, '$1?v=' + SHARED_SCRIPT_VERSION + '$2')
+// 共享脚本按各自内容取缓存键：data.js 随每次课程内容变动重建，手工升级的键会漏掉。
+// 构建时间戳不参与计算，内容不变时键保持稳定，HTML 不会因重建而产生差异。
+const sharedScriptVersionCache = new Map();
+function sharedScriptVersion(name, siteDir = __dirname) {
+  const filename = path.join(siteDir, name);
+  const stat = fs.statSync(filename);
+  const key = `${filename}:${stat.mtimeMs}:${stat.size}`;
+  if (!sharedScriptVersionCache.has(key)) {
+    const source = fs.readFileSync(filename, 'utf8').replace(/^\/\/ Last built: .*$/m, '');
+    sharedScriptVersionCache.set(key, assetVersion(source));
+  }
+  return sharedScriptVersionCache.get(key);
+}
+
+// src 允许等号两侧有空格，使 lesson.html 里按需加载的 `script.src = 'certification-data.js'` 与标签共用同一缓存键。
+function versionSharedAssets(html, siteDir = __dirname) {
+  return normalizeHeaderNavigation(html).replace(/(\bsrc\s*=\s*["']\/?((?:app|cmdpalette|certifications|projects|project-markdown|projects-data|data|certification-data|langs|md-render|skills-demo|progress|catalog|lesson-walkthrough|practice|practice-store|practice-worker|highlights|highlights-store|highlights-anchor)\.js))(?:\?[^"']*)?(["'])/g,
+    (_, prefix, name, quote) => `${prefix}?v=${sharedScriptVersion(name, siteDir)}${quote}`)
     .replace(/(\bsrc=["']\/?header\.js)(?:\?[^"']*)?(["'])/g, '$1?v=' + HEADER_ASSET_VERSION + '$2')
     .replace(/((?<![\w-])href=["']\/?style\.css)(?:\?[^"']*)?(["'])/g, '$1?v=' + HEADER_ASSET_VERSION + '$2')
     .replace(/((?<![\w-])href=["']\/?(?:learning-paths|roadmap|intelligence-check|certifications|projects|hubs|skills)\.css)(?:\?[^"']*)?(["'])/g, '$1?v=' + SHARED_STYLE_VERSION + '$2')
     .replace(/(\bsrc=["']\/?roadmap\.js)(?:\?[^"']*)?(["'])/g, '$1?v=20261026a$2');
+}
+
+// 在 data.js 与 certification-data.js 写出之后运行：站点根页面与 manual/ 下的手册小节页都按最终内容取缓存键。
+function versionBuiltPages(siteDir = __dirname) {
+  const sectionRoot = path.join(siteDir, 'manual');
+  const sections = fs.existsSync(sectionRoot)
+    ? fs.readdirSync(sectionRoot, { recursive: true }).filter(name => name.endsWith('.html')).map(name => path.join('manual', name))
+    : [];
+  const pages = fs.readdirSync(siteDir).filter(name => name.endsWith('.html')).concat(sections);
+  for (const page of pages) {
+    const target = path.join(siteDir, page);
+    const source = fs.readFileSync(target, 'utf8');
+    const output = versionSharedAssets(source, siteDir);
+    if (output !== source) fs.writeFileSync(target, output);
+  }
 }
 
 function stampSiteCards(cards) {
@@ -2273,10 +2302,7 @@ const ARTIFACTS = ${JSON.stringify(artifacts, null, 2)};
   });
   fs.writeFileSync(path.join(__dirname, 'og-cards.json'), JSON.stringify(ogCards, null, 2) + '\n');
   stampSiteCards(ogCards.cards);
-  for (const file of fs.readdirSync(__dirname).filter(name => name.endsWith('.html'))) {
-    const target = path.join(__dirname, file);
-    fs.writeFileSync(target, versionSharedAssets(fs.readFileSync(target, 'utf8')));
-  }
+  versionBuiltPages();
   syncCounts(totalLessons, artifacts.length);
   writeHubSitemaps(hubs);
   writeSitemap(phases, glossaryTerms.length, certifications, learningPaths, { projects, manuals, hubs });
@@ -3051,6 +3077,8 @@ function verifyCurriculum() {
 
 module.exports = {
   FIGURE_PROVIDER_ORDER,
+  sharedScriptVersion,
+  versionBuiltPages,
   buildFigureProviderManifest,
   discoverFigureProviderOrder,
   discoverArtifacts,

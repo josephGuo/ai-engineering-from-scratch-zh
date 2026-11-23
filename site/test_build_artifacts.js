@@ -25,6 +25,8 @@ const {
   renderCatalogDiscovery,
   renderCertificationDiscovery,
   serializeFigureProviderManifest,
+  sharedScriptVersion,
+  versionBuiltPages,
 } = require('./build.js');
 const {
   learningPathDestination,
@@ -461,10 +463,65 @@ function writeMarkdown(file, { name, description, version }) {
   ].join('\n'));
 }
 
+test('shared script cache keys follow file content and ignore the build timestamp', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aieng-script-version-'));
+  const file = path.join(dir, 'data.js');
+  const body = 'const PHASES = [];\n';
+  fs.writeFileSync(file, '// Auto-generated\n// Last built: 2026-01-01T00:00:00.000Z\n' + body);
+  const first = sharedScriptVersion('data.js', dir);
+  assert.match(first, /^[0-9a-f]{12}$/);
+  fs.writeFileSync(file, '// Auto-generated\n// Last built: 2026-02-02T00:00:00.000Z\n' + body);
+  fs.utimesSync(file, new Date(), new Date(Date.now() + 5000));
+  assert.equal(sharedScriptVersion('data.js', dir), first, 'a rebuild with the same content keeps the key');
+  fs.writeFileSync(file, '// Auto-generated\n// Last built: 2026-02-02T00:00:00.000Z\nconst PHASES = [1];\n');
+  fs.utimesSync(file, new Date(), new Date(Date.now() + 10000));
+  assert.notEqual(sharedScriptVersion('data.js', dir), first, 'changed content must change the key');
+  for (const page of ['index.html', 'catalog.html', 'lesson.html']) {
+    const source = fs.readFileSync(path.join(__dirname, page), 'utf8');
+    assert.ok(source.includes('src="data.js?v=' + sharedScriptVersion('data.js') + '"'), `${page} must load the current data.js`);
+  }
+});
+
+test('built pages, nested manual sections and the lesson loader carry content cache keys', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aieng-built-pages-'));
+  const lesson = path.join(dir, 'lesson.html');
+  const section = path.join(dir, 'manual', 'manual-demo', 'intro.html');
+  fs.writeFileSync(path.join(dir, 'data.js'), '// Last built: 2026-01-01T00:00:00.000Z\nconst PHASES = [];\n');
+  fs.writeFileSync(path.join(dir, 'certification-data.js'), 'window.CERTS = [];\n');
+  fs.writeFileSync(lesson, "<script>script.src = 'certification-data.js?v=20260831a';</script>\n<script src=\"data.js\"></script>\n");
+  fs.mkdirSync(path.dirname(section), { recursive: true });
+  fs.writeFileSync(section, '<script src="/data.js"></script>\n');
+
+  versionBuiltPages(dir);
+  const certKey = sharedScriptVersion('certification-data.js', dir);
+  const dataKey = sharedScriptVersion('data.js', dir);
+  assert.ok(fs.readFileSync(lesson, 'utf8').includes(`script.src = 'certification-data.js?v=${certKey}'`), 'the on-demand loader must use the content key');
+  assert.ok(fs.readFileSync(section, 'utf8').includes(`<script src="/data.js?v=${dataKey}">`), 'nested manual sections must use the content key');
+
+  const snapshot = [lesson, section].map(file => fs.readFileSync(file, 'utf8'));
+  versionBuiltPages(dir);
+  assert.deepEqual([lesson, section].map(file => fs.readFileSync(file, 'utf8')), snapshot, 'a second pass must not change the pages');
+
+  fs.writeFileSync(path.join(dir, 'certification-data.js'), 'window.CERTS = [1];\n');
+  fs.utimesSync(path.join(dir, 'certification-data.js'), new Date(), new Date(Date.now() + 5000));
+  versionBuiltPages(dir);
+  assert.notEqual(sharedScriptVersion('certification-data.js', dir), certKey);
+  assert.ok(fs.readFileSync(lesson, 'utf8').includes(`certification-data.js?v=${sharedScriptVersion('certification-data.js', dir)}'`), 'changed content must change the loader key');
+});
+
+test('generated manual sections and the lesson reader load the current data bundles', () => {
+  const lessonHtml = fs.readFileSync(path.join(__dirname, 'lesson.html'), 'utf8');
+  assert.ok(lessonHtml.includes(`script.src = 'certification-data.js?v=${sharedScriptVersion('certification-data.js')}'`));
+  const sectionRoot = path.join(__dirname, 'manual');
+  if (!fs.existsSync(sectionRoot)) return;
+  const pages = fs.readdirSync(sectionRoot, { recursive: true }).filter(name => name.endsWith('.html'));
+  assert.ok(pages.length > 0);
+  const expected = `src="/data.js?v=${sharedScriptVersion('data.js')}"`;
+  for (const page of pages) assert.ok(fs.readFileSync(path.join(sectionRoot, page), 'utf8').includes(expected), `manual/${page} must load the current data.js`);
+});
+
 test('shared site asset families use the expected cache keys on every page', () => {
   const release = '20261106a';
-  const scriptRelease = '20261121b';
-  const appRelease = scriptRelease;
   const styleRelease = HEADER_ASSET_VERSION;
   const navigationRelease = HEADER_ASSET_VERSION;
   assert.match(navigationRelease, /^\d{8}[a-z]$/);
@@ -495,13 +552,13 @@ test('shared site asset families use the expected cache keys on every page', () 
     for (const asset of ['learning-paths.css', 'roadmap.css', 'intelligence-check.css', 'certifications.css']) {
       if (source.includes(asset + '?v=')) assert.equal(versionFor(source, asset), release, `${page} has stale ${asset}`);
     }
-    assert.equal(versionFor(source, 'progress.js'), scriptRelease, `${page} has stale progress.js`);
+    assert.equal(versionFor(source, 'progress.js'), sharedScriptVersion('progress.js'), `${page} has stale progress.js`);
     assert.equal(versionFor(source, 'header.js'), navigationRelease, `${page} has stale header.js`);
-    assert.equal(versionFor(source, 'cmdpalette.js'), scriptRelease, `${page} has stale cmdpalette.js`);
-    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), scriptRelease, `${page} has stale certifications.js`);
+    assert.equal(versionFor(source, 'cmdpalette.js'), sharedScriptVersion('cmdpalette.js'), `${page} has stale cmdpalette.js`);
+    if (source.includes('src="certifications.js')) assert.equal(versionFor(source, 'certifications.js'), sharedScriptVersion('certifications.js'), `${page} has stale certifications.js`);
   }
 
-  assert.equal(versionFor(sourceFor('index.html'), 'app.js'), appRelease);
+  assert.equal(versionFor(sourceFor('index.html'), 'app.js'), sharedScriptVersion('app.js'));
   assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.css'), release);
   assert.equal(versionFor(sourceFor('prereqs.html'), 'roadmap.js'), roadmapRelease);
   assert.equal(versionFor(sourceFor('developer.html'), 'header.js'), navigationRelease);
@@ -1900,7 +1957,7 @@ test('lesson reader keeps learning-path context and renders a copyable full-dept
   const localeLoaderVersion = crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, 'figures-manifest.js'))).digest('hex').slice(0, 12);
   assert.ok(lessonHtml.includes('<script src="figures-manifest.js?v=' + localeLoaderVersion + '"'),
     'the lesson must load the current content-addressed locale loader');
-  assert.match(lessonHtml, /<script src="progress\.js\?v=20261121b/);
+  assert.ok(lessonHtml.includes('<script src="progress.js?v=' + sharedScriptVersion('progress.js') + '"'));
   assert.match(fs.readFileSync(path.join(__dirname, 'lesson-figures.js'), 'utf8'), /providerBaseUrl \+ provider/);
   assert.match(lessonHtml, /import\('https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11/);
 });
