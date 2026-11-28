@@ -1,7 +1,12 @@
 {
-  "base": "9712e323fde8cb2ec933310ac619e920e8e31017",
-  "target": "5db6280251f9f24123c972a358baf4b5e977277a",
-  "pending": [],
+  "base": "5db6280251f9f24123c972a358baf4b5e977277a",
+  "target": "f5c9b4ac005ef93cc2200b565387f658660859e9",
+  "pending": [
+    {
+      "batch": "lesson-action-head-julia-824-825",
+      "summary": "课程行动面板标题栏宽屏防挤压换行（#824）与 4 节 Julia 课程空计数崩溃修复（#825）线上部署验收"
+    }
+  ],
   "decisions": [
     {
       "scope": "README 结构与文案（2026-10-27）",
@@ -368,6 +373,19 @@
       "scope": "AI 工程工具全景（5db6280）线上验收并关闭批次（2026-11-26）",
       "decision": "#165 合并为 466eb9c03 并由 Vercel 部署至生产（dpl_7A15LLqnUYCWJsWALDLTRDQYZ54u，绑定 aieng-zh.cn 与 ai-engineering-from-scratch-zh.vercel.app）；合并后 Landscape 工作流（含 save-logos）绿灯通过。通过生产公共别名实测 /landscape（HTTP 200、canonical 指向 aieng-zh.cn/landscape.html）、/og/page/landscape.png?v=60a00c5973a5（HTTP 200、PNG 10,654B）、/logos/landscape/vllm.svg（HTTP 200、Content-Security-Policy: sandbox）、/sitemap.xml、/llms.txt、首页导航「工具全景」以及真实 Chrome 1,057 块渲染、.bin Logo 加载与 vLLM 详情弹窗交互均通过，关闭 landscape-821-823 pending 批次。",
       "paths": [
+        ".sync-upstream-pending.json"
+      ]
+    },
+    {
+      "scope": "上游 5db6280..f5c9b4a 行动面板头部防挤压与 Julia 空计数修复（2026-11-28）",
+      "decision": "同步上游 #824 与 #825：为 site/lesson.html 的 .lesson-action-head 补充 flex-wrap: wrap 与 .lesson-action-head > div:first-child 的 min-width: min(100%, 260px)，防止 >768px 视口下固定控件将标题块压窄；将 phase 02（03/05/09）与 phase 07（01）4 节 Julia 实现中的 sum(1 for ... if ...) 替换为 count(...)，消除空匹配抛 ArgumentError 崩溃；跳过上游 f5c9b4ac0 英文 data.js 构建产物，由中文源执行 node site/build.js 重建。同步基准推进至 f5c9b4ac0，待合并部署后完成线上验收再关闭 pending。",
+      "paths": [
+        "site/lesson.html",
+        "phases/02-ml-fundamentals/03-logistic-regression/code/main.jl",
+        "phases/02-ml-fundamentals/05-support-vector-machines/code/main.jl",
+        "phases/02-ml-fundamentals/09-model-evaluation/code/main.jl",
+        "phases/07-transformers-deep-dive/01-why-transformers/code/main.jl",
+        ".sync-upstream-base",
         ".sync-upstream-pending.json"
       ]
     }
