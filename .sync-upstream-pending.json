@@ -1,12 +1,7 @@
 {
   "base": "5db6280251f9f24123c972a358baf4b5e977277a",
   "target": "f5c9b4ac005ef93cc2200b565387f658660859e9",
-  "pending": [
-    {
-      "batch": "lesson-action-head-julia-824-825",
-      "summary": "课程行动面板标题栏宽屏防挤压换行（#824）与 4 节 Julia 课程空计数崩溃修复（#825）线上部署验收"
-    }
-  ],
+  "pending": [],
   "decisions": [
     {
       "scope": "README 结构与文案（2026-10-27）",
@@ -386,6 +381,13 @@
         "phases/02-ml-fundamentals/09-model-evaluation/code/main.jl",
         "phases/07-transformers-deep-dive/01-why-transformers/code/main.jl",
         ".sync-upstream-base",
+        ".sync-upstream-pending.json"
+      ]
+    },
+    {
+      "scope": "行动面板头部换行与 Julia 空计数批次（f5c9b4a）线上验收并关闭（2026-11-29）",
+      "decision": "#168 合并为 1b23a37b3 并由 Vercel 部署至生产（dpl_Hae5DxxmHsSVfyvcX1QBa5ccWXTm，Ready，绑定 aieng-zh.cn 与 ai-engineering-from-scratch-zh.vercel.app）。通过生产公共别名实测 /lessons/02-ml-fundamentals/03-logistic-regression/（HTTP 200、canonical 指向 aieng-zh.cn、含 flex-wrap: wrap 与 min-width: min(100%, 260px)）、/lesson.html?path=phases/07-transformers-deep-dive/01-why-transformers 与 /lessons/07-transformers-deep-dive/01-why-transformers/（HTTP 200），真实 Chrome 验证 1280/769/390px 展开态标题均保持单行（25–32px）且无裁切或横向溢出，关闭 lesson-action-head-julia-824-825 pending 批次。",
+      "paths": [
         ".sync-upstream-pending.json"
       ]
     }
