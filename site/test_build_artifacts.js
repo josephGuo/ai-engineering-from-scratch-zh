@@ -480,6 +480,22 @@ test('shared script cache keys follow file content and ignore the build timestam
     const source = fs.readFileSync(path.join(__dirname, page), 'utf8');
     assert.ok(source.includes('src="data.js?v=' + sharedScriptVersion('data.js') + '"'), `${page} must load the current data.js`);
   }
+
+  const projectsFile = path.join(dir, 'projects-data.js');
+  const projectsBody = '  "projects": []\n};\n';
+  fs.writeFileSync(projectsFile, 'window.AIFS_PROJECTS = {\n  "generated": "2026-01-01",\n' + projectsBody);
+  const projectsFirst = sharedScriptVersion('projects-data.js', dir);
+  assert.match(projectsFirst, /^[0-9a-f]{12}$/);
+  fs.writeFileSync(projectsFile, 'window.AIFS_PROJECTS = {\n  "generated": "2026-02-02",\n' + projectsBody);
+  fs.utimesSync(projectsFile, new Date(), new Date(Date.now() + 5000));
+  assert.equal(sharedScriptVersion('projects-data.js', dir), projectsFirst, 'a rebuild on another date keeps the projects-data.js key');
+  fs.writeFileSync(projectsFile, 'window.AIFS_PROJECTS = {\n  "generated": "2026-02-02",\n  "projects": [{"id": "demo"}]\n};\n');
+  fs.utimesSync(projectsFile, new Date(), new Date(Date.now() + 10000));
+  assert.notEqual(sharedScriptVersion('projects-data.js', dir), projectsFirst, 'changed projects content must change the key');
+  for (const page of ['project.html', 'projects.html']) {
+    const source = fs.readFileSync(path.join(__dirname, page), 'utf8');
+    assert.ok(source.includes('src="projects-data.js?v=' + sharedScriptVersion('projects-data.js') + '"'), `${page} must load the current projects-data.js`);
+  }
 });
 
 test('built pages, nested manual sections and the lesson loader carry content cache keys', () => {

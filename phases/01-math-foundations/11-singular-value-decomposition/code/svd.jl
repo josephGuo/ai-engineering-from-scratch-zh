@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Random
+using Statistics
 
 
 function svd_from_scratch(A; k=nothing, max_iters=300, tol=1e-10)

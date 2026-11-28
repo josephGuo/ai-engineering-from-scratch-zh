@@ -9,7 +9,7 @@
 using Random
 using Printf
 
-import Base: +, -, *, /, ^
+import Base: +, -, *, /, ^, inv
 
 
 mutable struct Value
@@ -68,6 +68,9 @@ function ^(a::Value, n::Real)
     end
     return out
 end
+
+
+inv(a::Value) = ^(a, -1.0)
 
 
 function /(a::Value, b::Value)

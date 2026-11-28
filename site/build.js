@@ -2087,14 +2087,16 @@ function withCard(html, type, id, spec) {
 const SHARED_STYLE_VERSION = '20261106a';
 
 // 共享脚本按各自内容取缓存键：data.js 随每次课程内容变动重建，手工升级的键会漏掉。
-// 构建时间戳不参与计算，内容不变时键保持稳定，HTML 不会因重建而产生差异。
+// 构建时间戳与 projects-data.js 顶层生成日期不参与计算，内容不变时键保持稳定，HTML 不会因跨日重建而产生差异。
 const sharedScriptVersionCache = new Map();
 function sharedScriptVersion(name, siteDir = __dirname) {
   const filename = path.join(siteDir, name);
   const stat = fs.statSync(filename);
   const key = `${filename}:${stat.mtimeMs}:${stat.size}`;
   if (!sharedScriptVersionCache.has(key)) {
-    const source = fs.readFileSync(filename, 'utf8').replace(/^\/\/ Last built: .*$/m, '');
+    const source = fs.readFileSync(filename, 'utf8')
+      .replace(/^\/\/ Last built: .*$/m, '')
+      .replace(/^(window\.AIFS_PROJECTS = \{\n  )"generated": "\d{4}-\d{2}-\d{2}",\n/, '$1');
     sharedScriptVersionCache.set(key, assetVersion(source));
   }
   return sharedScriptVersionCache.get(key);
